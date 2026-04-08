@@ -1,0 +1,649 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: EV Electric Investment Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User operations
+  - name: investments
+    description: Investment plan operations
+  - name: transactions
+    description: Transaction operations
+  - name: admin
+    description: Admin operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with phone and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout the current user
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user info
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/balance:
+    get:
+      operationId: getBalance
+      tags: [users]
+      summary: Get current user balance and portfolio
+      responses:
+        "200":
+          description: User balance info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceInfo"
+
+  /users/deposit:
+    post:
+      operationId: deposit
+      tags: [users]
+      summary: Request a deposit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositRequest"
+      responses:
+        "200":
+          description: Deposit request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /investment-plans:
+    get:
+      operationId: getInvestmentPlans
+      tags: [investments]
+      summary: Get all active investment plans
+      responses:
+        "200":
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvestmentPlan"
+
+  /investments:
+    get:
+      operationId: getUserInvestments
+      tags: [investments]
+      summary: Get current user's investments
+      responses:
+        "200":
+          description: List of user investments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserInvestment"
+    post:
+      operationId: createInvestment
+      tags: [investments]
+      summary: Invest in a plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvestmentRequest"
+      responses:
+        "201":
+          description: Investment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInvestment"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /transactions:
+    get:
+      operationId: getTransactions
+      tags: [transactions]
+      summary: Get current user's transactions
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: Admin - get all users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserWithBalance"
+
+  /admin/users/{userId}/balance:
+    patch:
+      operationId: adminUpdateUserBalance
+      tags: [admin]
+      summary: Admin - update user balance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBalanceRequest"
+      responses:
+        "200":
+          description: Balance updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithBalance"
+
+  /admin/transactions:
+    get:
+      operationId: adminGetTransactions
+      tags: [admin]
+      summary: Admin - get all transactions
+      responses:
+        "200":
+          description: List of all transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /admin/transactions/{transactionId}/approve:
+    patch:
+      operationId: adminApproveTransaction
+      tags: [admin]
+      summary: Admin - approve a pending transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /admin/transactions/{transactionId}/reject:
+    patch:
+      operationId: adminRejectTransaction
+      tags: [admin]
+      summary: Admin - reject a pending transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /admin/investment-plans:
+    post:
+      operationId: adminCreateInvestmentPlan
+      tags: [admin]
+      summary: Admin - create investment plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvestmentPlanRequest"
+      responses:
+        "201":
+          description: Plan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestmentPlan"
+
+  /admin/investment-plans/{planId}:
+    patch:
+      operationId: adminUpdateInvestmentPlan
+      tags: [admin]
+      summary: Admin - update investment plan
+      parameters:
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvestmentPlanRequest"
+      responses:
+        "200":
+          description: Plan updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestmentPlan"
+    delete:
+      operationId: adminDeleteInvestmentPlan
+      tags: [admin]
+      summary: Admin - delete investment plan
+      parameters:
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    LoginRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+      required:
+        - phone
+        - password
+
+    RegisterRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        referralCode:
+          type: string
+      required:
+        - phone
+        - password
+        - name
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required:
+        - user
+        - token
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        isAdmin:
+          type: boolean
+        referralCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - phone
+        - isAdmin
+        - referralCode
+        - createdAt
+
+    UserWithBalance:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            balance:
+              type: number
+            totalInvested:
+              type: number
+            totalEarnings:
+              type: number
+          required:
+            - balance
+            - totalInvested
+            - totalEarnings
+
+    BalanceInfo:
+      type: object
+      properties:
+        balance:
+          type: number
+        totalInvested:
+          type: number
+        totalEarnings:
+          type: number
+        activeInvestments:
+          type: integer
+      required:
+        - balance
+        - totalInvested
+        - totalEarnings
+        - activeInvestments
+
+    DepositRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+        notes:
+          type: string
+      required:
+        - amount
+        - paymentMethod
+
+    InvestmentPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        minAmount:
+          type: number
+        maxAmount:
+          type: number
+        dailyReturnPercent:
+          type: number
+        durationDays:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - description
+        - minAmount
+        - maxAmount
+        - dailyReturnPercent
+        - durationDays
+        - isActive
+
+    CreateInvestmentPlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        minAmount:
+          type: number
+        maxAmount:
+          type: number
+        dailyReturnPercent:
+          type: number
+        durationDays:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - name
+        - description
+        - minAmount
+        - maxAmount
+        - dailyReturnPercent
+        - durationDays
+
+    UserInvestment:
+      type: object
+      properties:
+        id:
+          type: integer
+        planId:
+          type: integer
+        planName:
+          type: string
+        amount:
+          type: number
+        dailyReturnPercent:
+          type: number
+        durationDays:
+          type: integer
+        status:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        totalEarned:
+          type: number
+      required:
+        - id
+        - planId
+        - planName
+        - amount
+        - dailyReturnPercent
+        - durationDays
+        - status
+        - startDate
+        - endDate
+        - totalEarned
+
+    CreateInvestmentRequest:
+      type: object
+      properties:
+        planId:
+          type: integer
+        amount:
+          type: number
+      required:
+        - planId
+        - amount
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        type:
+          type: string
+          enum: [deposit, withdrawal, investment, earning]
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        paymentMethod:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - type
+        - amount
+        - status
+        - createdAt
+
+    UpdateBalanceRequest:
+      type: object
+      properties:
+        balance:
+          type: number
+        note:
+          type: string
+      required:
+        - balance
