@@ -1,17 +1,35 @@
-import nodemailer from "nodemailer";
+import { google } from "googleapis";
 import { logger } from "./logger.js";
 
-function buildTransporter() {
-  const user = (process.env.EMAIL || "").trim();
-  const pass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
+async function sendViaGmailAPI(to: string, subject: string, html: string, text: string) {
+  const clientId     = (process.env.GMAIL_CLIENT_ID     || "").trim();
+  const clientSecret = (process.env.GMAIL_CLIENT_SECRET || "").trim();
+  const refreshToken = (process.env.GMAIL_REFRESH_TOKEN || "").trim();
+  const sender       = (process.env.EMAIL               || "").trim();
+
+  if (!clientId || !clientSecret || !refreshToken || !sender) return false;
+
+  const oAuth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    "https://developers.google.com/oauthplayground"
+  );
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
+  const messageParts = [
+    `From: "MoneySetu" <${sender}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=utf-8`,
+    ``,
+    html,
+  ];
+  const raw = Buffer.from(messageParts.join("\n")).toString("base64url");
+  await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+  return true;
 }
 
 const OTP_HTML = (otp: string) => `
@@ -67,25 +85,18 @@ const OTP_HTML = (otp: string) => `
 </html>`;
 
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
-  const transporter = buildTransporter();
-
-  if (!transporter) {
-    logger.warn({ to }, `EMAIL/EMAIL_PASS not configured — OTP: ${otp}`);
-    return;
-  }
+  const subject = "Your MoneySetu verification code";
+  const text    = `Your MoneySetu verification code is: ${otp}\n\nExpires in 5 minutes. Do not share it.`;
 
   try {
-    await transporter.sendMail({
-      from: `"MoneySetu" <${(process.env.EMAIL || "").trim()}>`,
-      to,
-      subject: "Your MoneySetu verification code",
-      text: `Your MoneySetu verification code is: ${otp}\n\nExpires in 5 minutes. Do not share it.`,
-      html: OTP_HTML(otp),
-    });
-    logger.info({ to }, "OTP email sent");
+    const sent = await sendViaGmailAPI(to, subject, OTP_HTML(otp), text);
+    if (sent) {
+      logger.info({ to }, "OTP email sent via Gmail API");
+      return;
+    }
+    logger.warn({ to }, `Gmail API not configured — OTP: ${otp}`);
   } catch (err: any) {
-    // Log OTP to server console so admin can retrieve it from Render logs
-    logger.error({ err, to }, `SMTP failed — OTP for ${to} is: ${otp}`);
-    throw new Error(`Email delivery failed: ${err?.message}`);
+    logger.error({ err, to }, `Gmail API failed — OTP for ${to}: ${otp}`);
+    throw new Error(`Email send failed: ${err?.message}`);
   }
 }
