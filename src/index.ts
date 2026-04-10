@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { seedDefaultAdmin } from "./lib/seed.js";
+import { seedDefaultAdmin, runMigrations } from "./lib/seed.js";
 import { startInterestCron } from "./lib/interestAccrual.js";
 import { startPay0StatusChecker } from "./routes/pay0.js";
 
@@ -25,7 +25,7 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
-  seedDefaultAdmin();
+  runMigrations().then(() => seedDefaultAdmin());
   startInterestCron();
   startPay0StatusChecker();
 });

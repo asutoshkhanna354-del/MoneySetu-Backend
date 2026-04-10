@@ -12,6 +12,16 @@ const PLAN_IMAGES: Record<string, string> = {
   Diamond:  "https://lh3.googleusercontent.com/d/1SDAdZJ-OuwUh1IeC1grksgzVBw3V1G17",
 };
 
+export async function runMigrations() {
+  try {
+    // Add email column if it doesn't exist (safe to run multiple times)
+    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE`);
+    logger.info("Migration OK: users.email column ensured");
+  } catch (err) {
+    logger.error({ err }, "Migration warning (non-fatal)");
+  }
+}
+
 export async function seedDefaultAdmin() {
   try {
     // Always ensure the admin user exists with username="admin"
