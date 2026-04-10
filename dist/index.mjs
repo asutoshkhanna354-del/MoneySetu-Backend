@@ -63336,28 +63336,39 @@ function startInterestCron() {
 // src/index.ts
 var rawPort = process.env["PORT"];
 if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided."
-  );
+  throw new Error("PORT environment variable is required but was not provided.");
 }
 var port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-app_default.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
+(async () => {
+  try {
+    await pool.query("SELECT 1");
+    logger.info("DB pre-warm OK");
+  } catch (err) {
+    logger.warn({ err }, "DB pre-warm failed \u2014 server will still start");
   }
+  await new Promise((resolve, reject) => {
+    app_default.listen(port, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
   logger.info({ port }, "Server listening");
   runMigrations().then(() => seedDefaultAdmin());
   startInterestCron();
   startPay0StatusChecker();
-  const pingDb = () => pool.query("SELECT 1").catch(
-    (e) => logger.warn({ err: e.message }, "DB keepalive ping failed")
+  setInterval(
+    () => pool.query("SELECT 1").catch((e) => logger.warn({ err: e.message }, "DB keepalive ping failed")),
+    4 * 60 * 1e3
   );
-  pingDb();
-  setInterval(pingDb, 4 * 60 * 1e3);
+})().catch((err) => {
+  logger.error({ err }, "Fatal startup error");
+  process.exit(1);
 });
 /*! Bundled license information:
 
