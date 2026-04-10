@@ -1,25 +1,24 @@
 import nodemailer from "nodemailer";
 import { logger } from "./logger.js";
 
-function createTransporter() {
-  const user = process.env.EMAIL;
-  const pass = process.env.EMAIL_PASS;
-  if (!user || !pass) {
-    logger.warn("EMAIL or EMAIL_PASS env vars not set — OTP emails disabled");
-    return null;
-  }
+function buildTransporter() {
+  const user = (process.env.EMAIL || "").trim();
+  const pass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
+  if (!user || !pass) return null;
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: { user, pass },
-    pool: true,
+    tls: { rejectUnauthorized: false },
   });
 }
 
-const transporter = createTransporter();
-
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
+  const transporter = buildTransporter();
+
   if (!transporter) {
-    logger.warn({ to }, "Transporter not configured — skipping OTP email. OTP: " + otp);
+    logger.warn({ to }, `EMAIL/EMAIL_PASS not set — OTP for ${to}: ${otp}`);
     return;
   }
 
@@ -36,11 +35,9 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
     <tr>
       <td align="center">
         <table width="100%" style="max-width:480px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-          <!-- Purple top bar -->
           <tr>
             <td style="height:6px;background:linear-gradient(90deg,#6d28d9,#a855f7,#6d28d9);"></td>
           </tr>
-          <!-- Logo -->
           <tr>
             <td style="padding:32px 36px 20px;background:#ffffff;">
               <h1 style="margin:0 0 4px;font-size:28px;font-weight:800;color:#1a1035;letter-spacing:-0.5px;">
@@ -49,16 +46,13 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
               <p style="margin:0;font-size:11px;color:#888;letter-spacing:1.2px;text-transform:uppercase;">India's Smart Investment Platform</p>
             </td>
           </tr>
-          <!-- Divider -->
           <tr><td style="padding:0 36px;"><div style="height:1px;background:#eeeeee;"></div></td></tr>
-          <!-- Body -->
           <tr>
             <td style="padding:28px 36px 8px;">
               <p style="margin:0 0 6px;font-size:16px;color:#222;font-weight:600;">Hello!</p>
               <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.7;">
                 Use the code below to verify your MoneySetu account. It expires in <strong style="color:#1a1035;">5 minutes</strong>.
               </p>
-              <!-- OTP Box -->
               <div style="background:#f5f0ff;border:2px solid #7c3aed;border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:24px;">
                 <p style="margin:0 0 8px;font-size:12px;color:#7c3aed;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Verification Code</p>
                 <span style="font-size:48px;font-weight:900;letter-spacing:12px;color:#6d28d9;font-variant-numeric:tabular-nums;">${otp}</span>
@@ -68,7 +62,6 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
               </p>
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td style="padding:16px 36px 32px;">
               <div style="border-top:1px solid #eeeeee;padding-top:20px;">
@@ -88,17 +81,17 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
 
   const text = `Your MoneySetu verification code is: ${otp}\n\nThis code expires in 5 minutes. Do not share it with anyone.`;
 
-  await transporter.sendMail({
-    from: `"MoneySetu" <${process.env.EMAIL}>`,
-    to,
-    subject: "Your MoneySetu verification code",
-    text,
-    html,
-    headers: {
-      "X-Priority": "1",
-      "X-Mailer": "MoneySetu",
-    },
-  });
-
-  logger.info({ to }, "OTP email sent");
+  try {
+    await transporter.sendMail({
+      from: `"MoneySetu" <${(process.env.EMAIL || "").trim()}>`,
+      to,
+      subject: "Your MoneySetu verification code",
+      text,
+      html,
+    });
+    logger.info({ to }, "OTP email sent");
+  } catch (err: any) {
+    logger.error({ err, to }, `SMTP send failed — OTP for ${to}: ${otp}`);
+    throw new Error(`Email send failed: ${err?.message}`);
+  }
 }
