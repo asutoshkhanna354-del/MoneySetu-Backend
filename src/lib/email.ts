@@ -1,26 +1,15 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { logger } from "./logger.js";
 
-function buildTransporter() {
-  const user = (process.env.EMAIL || "").trim();
-  const pass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
-}
-
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
-  const transporter = buildTransporter();
+  const apiKey = (process.env.RESEND_API_KEY || "").trim();
 
-  if (!transporter) {
-    logger.warn({ to }, `EMAIL/EMAIL_PASS not set — OTP for ${to}: ${otp}`);
+  if (!apiKey) {
+    logger.warn({ to }, `RESEND_API_KEY not set — OTP for ${to}: ${otp}`);
     return;
   }
+
+  const resend = new Resend(apiKey);
 
   const html = `
 <!DOCTYPE html>
@@ -79,19 +68,18 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
 </body>
 </html>`;
 
-  const text = `Your MoneySetu verification code is: ${otp}\n\nThis code expires in 5 minutes. Do not share it with anyone.`;
+  const { error } = await resend.emails.send({
+    from: "MoneySetu <onboarding@resend.dev>",
+    to,
+    subject: "Your MoneySetu verification code",
+    html,
+    text: `Your MoneySetu verification code is: ${otp}\n\nThis code expires in 5 minutes. Do not share it with anyone.`,
+  });
 
-  try {
-    await transporter.sendMail({
-      from: `"MoneySetu" <${(process.env.EMAIL || "").trim()}>`,
-      to,
-      subject: "Your MoneySetu verification code",
-      text,
-      html,
-    });
-    logger.info({ to }, "OTP email sent");
-  } catch (err: any) {
-    logger.error({ err, to }, `SMTP send failed — OTP for ${to}: ${otp}`);
-    throw new Error(`Email send failed: ${err?.message}`);
+  if (error) {
+    logger.error({ error, to }, `Resend failed — OTP for ${to}: ${otp}`);
+    throw new Error(`Email send failed: ${error.message}`);
   }
+
+  logger.info({ to }, "OTP email sent via Resend");
 }
