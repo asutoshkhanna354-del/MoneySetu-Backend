@@ -1,6 +1,7 @@
 import { db } from "@workspace/db";
 import { userInvestmentsTable, usersTable, transactionsTable } from "@workspace/db/schema";
 import { eq, sql } from "drizzle-orm";
+
 import { logger } from "./logger.js";
 
 export async function accrueInterest() {
@@ -60,23 +61,42 @@ export async function accrueInterest() {
 }
 
 export function startInterestCron() {
-  // Run once at startup (for testing), then every 24 hours
-  const INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
+  const INTERVAL_MS = 24 * 60 * 60 * 1000;
   logger.info("Interest accrual cron started (runs every 24h)");
 
-  // Run at midnight every day
-  const scheduleNext = () => {
+  // Run immediately at startup if today's interest hasn't been credited yet
+  const runStartupCheck = async () => {
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const result = await db.execute(
+        sql`SELECT id FROM transactions WHERE type = 'earning' AND created_at >= ${todayStart.toISOString()} LIMIT 1`
+      );
+      const rows = (result as any).rows as any[];
+      if (!rows || rows.length === 0) {
+        logger.info("No interest credited today — running accrual now on startup");
+        await accrueInterest();
+      } else {
+        logger.info("Interest already credited today — skipping startup accrual");
+      }
+    } catch (err) {
+      logger.error({ err }, "Startup interest check error");
+    }
+  };
+
+  runStartupCheck();
+
+  // Also schedule at midnight every day
+  const scheduleNextMidnight = () => {
     const now = new Date();
     const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0); // next midnight
+    midnight.setHours(24, 0, 0, 0);
     const msUntilMidnight = midnight.getTime() - now.getTime();
-
     setTimeout(async () => {
       await accrueInterest();
       setInterval(accrueInterest, INTERVAL_MS);
     }, msUntilMidnight);
   };
 
-  scheduleNext();
+  scheduleNextMidnight();
 }
