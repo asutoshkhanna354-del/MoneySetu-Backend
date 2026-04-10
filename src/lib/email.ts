@@ -1,15 +1,36 @@
-import { Resend } from "resend";
+import { google } from "googleapis";
 import { logger } from "./logger.js";
 
+async function sendViaGmailAPI(to: string, subject: string, html: string, text: string) {
+  const clientId     = (process.env.GMAIL_CLIENT_ID     || "").trim();
+  const clientSecret = (process.env.GMAIL_CLIENT_SECRET || "").trim();
+  const refreshToken = (process.env.GMAIL_REFRESH_TOKEN || "").trim();
+  const sender       = (process.env.EMAIL               || "").trim();
+
+  if (!clientId || !clientSecret || !refreshToken || !sender) return false;
+
+  const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, "https://developers.google.com/oauthplayground");
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
+  const messageParts = [
+    `From: "MoneySetu" <${sender}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=utf-8`,
+    ``,
+    html,
+  ];
+  const raw = Buffer.from(messageParts.join("\n")).toString("base64url");
+
+  await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+  return true;
+}
+
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
-  const apiKey = (process.env.RESEND_API_KEY || "").trim();
-
-  if (!apiKey) {
-    logger.warn({ to }, `RESEND_API_KEY not set — OTP for ${to}: ${otp}`);
-    return;
-  }
-
-  const resend = new Resend(apiKey);
+  const subject = "Your MoneySetu verification code";
 
   const html = `
 <!DOCTYPE html>
@@ -68,18 +89,17 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
 </body>
 </html>`;
 
-  const { error } = await resend.emails.send({
-    from: "MoneySetu <onboarding@resend.dev>",
-    to,
-    subject: "Your MoneySetu verification code",
-    html,
-    text: `Your MoneySetu verification code is: ${otp}\n\nThis code expires in 5 minutes. Do not share it with anyone.`,
-  });
+  const text = `Your MoneySetu verification code is: ${otp}\n\nThis code expires in 5 minutes. Do not share it with anyone.`;
 
-  if (error) {
-    logger.error({ error, to }, `Resend failed — OTP for ${to}: ${otp}`);
-    throw new Error(`Email send failed: ${error.message}`);
+  try {
+    const sent = await sendViaGmailAPI(to, subject, html, text);
+    if (sent) {
+      logger.info({ to }, "OTP email sent via Gmail API");
+      return;
+    }
+    logger.warn({ to }, `Gmail API not configured — OTP for ${to}: ${otp}`);
+  } catch (err: any) {
+    logger.error({ err, to }, `Gmail API failed — OTP for ${to}: ${otp}`);
+    throw new Error(`Email send failed: ${err?.message}`);
   }
-
-  logger.info({ to }, "OTP email sent via Resend");
 }
