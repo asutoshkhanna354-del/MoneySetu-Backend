@@ -18769,14 +18769,14 @@ var require_etag = __commonJS({
   "../../node_modules/.pnpm/etag@1.8.1/node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto2 = __require("crypto");
+    var crypto3 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash2 = crypto2.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash2 = crypto3.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash2 + '"';
     }
@@ -22191,17 +22191,17 @@ var require_content_disposition = __commonJS({
 // ../../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "../../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js"(exports) {
-    var crypto2 = __require("crypto");
+    var crypto3 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" != typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto2.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto3.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(input, secret) {
       if ("string" != typeof input) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
       var tentativeValue = input.slice(0, input.lastIndexOf(".")), expectedInput = exports.sign(tentativeValue, secret), expectedBuffer = Buffer.from(expectedInput), inputBuffer = Buffer.from(input);
-      return expectedBuffer.length === inputBuffer.length && crypto2.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
+      return expectedBuffer.length === inputBuffer.length && crypto3.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
     };
   }
 });
@@ -29767,7 +29767,7 @@ var require_cert_signatures = __commonJS({
 var require_sasl = __commonJS({
   "../../node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
     "use strict";
-    var crypto2 = require_utils5();
+    var crypto3 = require_utils5();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
     function startSession(mechanisms, stream) {
       const candidates = ["SCRAM-SHA-256"];
@@ -29779,7 +29779,7 @@ var require_sasl = __commonJS({
       if (mechanism === "SCRAM-SHA-256-PLUS" && typeof stream.getPeerCertificate !== "function") {
         throw new Error("SASL: Mechanism SCRAM-SHA-256-PLUS requires a certificate");
       }
-      const clientNonce = crypto2.randomBytes(18).toString("base64");
+      const clientNonce = crypto3.randomBytes(18).toString("base64");
       const gs2Header = mechanism === "SCRAM-SHA-256-PLUS" ? "p=tls-server-end-point" : stream ? "y" : "n";
       return {
         mechanism,
@@ -29814,20 +29814,20 @@ var require_sasl = __commonJS({
         const peerCert = stream.getPeerCertificate().raw;
         let hashName = signatureAlgorithmHashFromCertificate(peerCert);
         if (hashName === "MD5" || hashName === "SHA-1") hashName = "SHA-256";
-        const certHash = await crypto2.hashByName(hashName, peerCert);
+        const certHash = await crypto3.hashByName(hashName, peerCert);
         const bindingData = Buffer.concat([Buffer.from("p=tls-server-end-point,,"), Buffer.from(certHash)]);
         channelBinding = bindingData.toString("base64");
       }
       const clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + sv.nonce;
       const authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
       const saltBytes = Buffer.from(sv.salt, "base64");
-      const saltedPassword = await crypto2.deriveKey(password, saltBytes, sv.iteration);
-      const clientKey = await crypto2.hmacSha256(saltedPassword, "Client Key");
-      const storedKey = await crypto2.sha256(clientKey);
-      const clientSignature = await crypto2.hmacSha256(storedKey, authMessage);
+      const saltedPassword = await crypto3.deriveKey(password, saltBytes, sv.iteration);
+      const clientKey = await crypto3.hmacSha256(saltedPassword, "Client Key");
+      const storedKey = await crypto3.sha256(clientKey);
+      const clientSignature = await crypto3.hmacSha256(storedKey, authMessage);
       const clientProof = xorBuffers(Buffer.from(clientKey), Buffer.from(clientSignature)).toString("base64");
-      const serverKey = await crypto2.hmacSha256(saltedPassword, "Server Key");
-      const serverSignatureBytes = await crypto2.hmacSha256(serverKey, authMessage);
+      const serverKey = await crypto3.hmacSha256(saltedPassword, "Server Key");
+      const serverSignatureBytes = await crypto3.hmacSha256(serverKey, authMessage);
       session.message = "SASLResponse";
       session.serverSignature = Buffer.from(serverSignatureBytes).toString("base64");
       session.response = clientFinalMessageWithoutProof + ",p=" + clientProof;
@@ -31995,7 +31995,7 @@ var require_client = __commonJS({
     var Query2 = require_query();
     var defaults2 = require_defaults();
     var Connection2 = require_connection();
-    var crypto2 = require_utils5();
+    var crypto3 = require_utils5();
     var activeQueryDeprecationNotice = nodeUtils.deprecate(
       () => {
       },
@@ -32230,7 +32230,7 @@ var require_client = __commonJS({
       _handleAuthMD5Password(msg) {
         this._getPassword(async () => {
           try {
-            const hashedPassword = await crypto2.postgresMd5PasswordHash(this.user, this.password, msg.salt);
+            const hashedPassword = await crypto3.postgresMd5PasswordHash(this.user, this.password, msg.salt);
             this.connection.password(hashedPassword);
           } catch (e) {
             this.emit("error", e);
@@ -33803,14 +33803,14 @@ var require_buffer_equal_constant_time = __commonJS({
 var require_jwa = __commonJS({
   "../../node_modules/.pnpm/jwa@2.0.1/node_modules/jwa/index.js"(exports, module) {
     var Buffer2 = require_safe_buffer().Buffer;
-    var crypto2 = __require("crypto");
+    var crypto3 = __require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util2 = __require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto2.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto3.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
@@ -33900,17 +33900,17 @@ var require_jwa = __commonJS({
       return function sign(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac = crypto2.createHmac("sha" + bits, secret);
+        var hmac = crypto3.createHmac("sha" + bits, secret);
         var sig = (hmac.update(thing), hmac.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto2 ? function timingSafeEqual2(a, b) {
+    var timingSafeEqual = "timingSafeEqual" in crypto3 ? function timingSafeEqual2(a, b) {
       if (a.byteLength !== b.byteLength) {
         return false;
       }
-      return crypto2.timingSafeEqual(a, b);
+      return crypto3.timingSafeEqual(a, b);
     } : function timingSafeEqual2(a, b) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -33927,7 +33927,7 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto2.createSign("RSA-SHA" + bits);
+        var signer = crypto3.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -33937,7 +33937,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto2.createVerify("RSA-SHA" + bits);
+        var verifier = crypto3.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -33946,11 +33946,11 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto2.createSign("RSA-SHA" + bits);
+        var signer = crypto3.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto2.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto2.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto3.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto3.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -33960,12 +33960,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto2.createVerify("RSA-SHA" + bits);
+        var verifier = crypto3.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto2.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto2.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto3.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto3.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -61470,6 +61470,7 @@ var usersTable = pgTable("users", {
   name: text("name").notNull(),
   username: text("username").unique(),
   phone: text("phone").unique(),
+  email: text("email").unique(),
   passwordHash: text("password_hash").notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
   referralCode: text("referral_code").notNull().unique(),
@@ -61623,8 +61624,306 @@ function nanoid3(size = 8) {
   return Array.from(bytes).map((b) => alphabet[b % alphabet.length]).join("");
 }
 
+// src/lib/email.ts
+import { google } from "googleapis";
+
+// src/lib/logger.ts
+var import_pino = __toESM(require_pino(), 1);
+var isProduction = process.env.NODE_ENV === "production";
+var logger = (0, import_pino.default)({
+  level: process.env.LOG_LEVEL ?? "info",
+  redact: [
+    "req.headers.authorization",
+    "req.headers.cookie",
+    "res.headers['set-cookie']"
+  ],
+  ...isProduction ? {} : {
+    transport: {
+      target: "pino-pretty",
+      options: { colorize: true }
+    }
+  }
+});
+
+// src/lib/email.ts
+async function sendViaGmailAPI(to, subject, html, text2) {
+  const clientId = (process.env.GMAIL_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.GMAIL_CLIENT_SECRET || "").trim();
+  const refreshToken = (process.env.GMAIL_REFRESH_TOKEN || "").trim();
+  const sender = (process.env.EMAIL || "").trim();
+  if (!clientId || !clientSecret || !refreshToken || !sender) return false;
+  const oAuth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    "https://developers.google.com/oauthplayground"
+  );
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
+  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+  const messageParts = [
+    `From: "MoneySetu" <${sender}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=utf-8`,
+    ``,
+    html
+  ];
+  const raw = Buffer.from(messageParts.join("\n")).toString("base64url");
+  await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+  return true;
+}
+var OTP_HTML = (otp) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="height:6px;background:linear-gradient(90deg,#6d28d9,#a855f7,#6d28d9);"></td></tr>
+        <tr>
+          <td style="padding:32px 36px 20px;">
+            <h1 style="margin:0 0 4px;font-size:28px;font-weight:800;color:#1a1035;">
+              Money<span style="color:#7c3aed;">Setu</span>
+            </h1>
+            <p style="margin:0;font-size:11px;color:#888;letter-spacing:1.2px;text-transform:uppercase;">India's Smart Investment Platform</p>
+          </td>
+        </tr>
+        <tr><td style="padding:0 36px;"><div style="height:1px;background:#eeeeee;"></div></td></tr>
+        <tr>
+          <td style="padding:28px 36px 8px;">
+            <p style="margin:0 0 6px;font-size:16px;color:#222;font-weight:600;">Hello!</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.7;">
+              Use the code below to verify your MoneySetu account. It expires in <strong style="color:#1a1035;">5 minutes</strong>.
+            </p>
+            <div style="background:#f5f0ff;border:2px solid #7c3aed;border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:24px;">
+              <p style="margin:0 0 8px;font-size:12px;color:#7c3aed;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Verification Code</p>
+              <span style="font-size:48px;font-weight:900;letter-spacing:12px;color:#6d28d9;">${otp}</span>
+            </div>
+            <p style="margin:0 0 28px;font-size:13px;color:#888;line-height:1.7;background:#fff8f0;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;">
+              <strong style="color:#92400e;">Never share this code.</strong> MoneySetu will never ask for your verification code.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 36px 32px;">
+            <div style="border-top:1px solid #eeeeee;padding-top:20px;">
+              <p style="margin:0;font-size:12px;color:#aaa;line-height:1.7;">
+                If you didn't request this code, you can safely ignore this email.<br>
+                &copy; 2026 MoneySetu. All rights reserved.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+async function sendOtpEmail(to, otp) {
+  const subject = "Your MoneySetu verification code";
+  const text2 = `Your MoneySetu verification code is: ${otp}
+
+Expires in 5 minutes. Do not share it.`;
+  try {
+    const sent = await sendViaGmailAPI(to, subject, OTP_HTML(otp), text2);
+    if (sent) {
+      logger.info({ to }, "OTP email sent via Gmail API");
+      return;
+    }
+    logger.warn({ to }, `Gmail API not configured \u2014 OTP: ${otp}`);
+  } catch (err) {
+    logger.error({ err, to }, `Gmail API failed \u2014 OTP for ${to}: ${otp}`);
+    throw new Error(`Email send failed: ${err?.message}`);
+  }
+}
+
 // src/routes/auth.ts
+import crypto2 from "crypto";
 var router2 = (0, import_express2.Router)();
+var otpStore = /* @__PURE__ */ new Map();
+var otpRequestLog = /* @__PURE__ */ new Map();
+function generateOtp() {
+  return String(crypto2.randomInt(1e5, 999999));
+}
+function isRateLimited(email3) {
+  const now = Date.now();
+  const windowMs = 5 * 60 * 1e3;
+  const log = (otpRequestLog.get(email3) || []).filter((t) => now - t < windowMs);
+  if (log.length >= 3) return true;
+  log.push(now);
+  otpRequestLog.set(email3, log);
+  return false;
+}
+router2.post("/send-otp", async (req, res) => {
+  try {
+    const { email: email3, phone, type } = req.body;
+    if (!type || !["register", "login"].includes(type)) {
+      res.status(400).json({ error: "Invalid OTP type" });
+      return;
+    }
+    if (type === "register") {
+      if (!email3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email3)) {
+        res.status(400).json({ error: "Valid email required" });
+        return;
+      }
+      const lowerEmail = email3.toLowerCase();
+      const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, lowerEmail));
+      if (existing) {
+        res.status(400).json({ error: "Email already registered. Please login instead." });
+        return;
+      }
+      if (isRateLimited(lowerEmail)) {
+        res.status(429).json({ error: "Too many OTP requests. Wait 5 minutes and try again." });
+        return;
+      }
+      const code2 = generateOtp();
+      otpStore.set(lowerEmail, { code: code2, expiry: new Date(Date.now() + 5 * 60 * 1e3), attempts: 0 });
+      await sendOtpEmail(lowerEmail, code2);
+      res.json({ success: true, message: `OTP sent to ${lowerEmail}` });
+      return;
+    }
+    const identifier = phone || email3;
+    if (!identifier) {
+      res.status(400).json({ error: "Phone number or email required" });
+      return;
+    }
+    const [user] = await db.select().from(usersTable).where(
+      or(eq(usersTable.phone, identifier), eq(usersTable.email, identifier.toLowerCase()))
+    );
+    if (!user) {
+      res.status(404).json({ error: "No account found with this phone/email" });
+      return;
+    }
+    if (!user.email) {
+      res.status(400).json({ error: "No email linked to this account. Contact support." });
+      return;
+    }
+    if (isRateLimited(user.email)) {
+      res.status(429).json({ error: "Too many OTP requests. Wait 5 minutes and try again." });
+      return;
+    }
+    const code = generateOtp();
+    otpStore.set(user.email, { code, expiry: new Date(Date.now() + 5 * 60 * 1e3), attempts: 0, userId: user.id });
+    await sendOtpEmail(user.email, code);
+    res.json({ success: true, message: "OTP sent to your registered email" });
+  } catch (err) {
+    req.log.error({ err }, "Send OTP error");
+    res.status(500).json({ error: "Failed to send OTP. Check email configuration." });
+  }
+});
+router2.post("/register", async (req, res) => {
+  try {
+    const { phone, email: email3, password, name, referralCode, otp } = req.body;
+    if (!phone || !email3 || !password || !name) {
+      res.status(400).json({ error: "Name, phone, email and password are required" });
+      return;
+    }
+    if (!otp) {
+      res.status(400).json({ error: "OTP is required. Please verify your email first." });
+      return;
+    }
+    const lowerEmail = email3.toLowerCase();
+    const record2 = otpStore.get(lowerEmail);
+    if (!record2) {
+      res.status(400).json({ error: "OTP not found or expired. Please request a new one." });
+      return;
+    }
+    if (/* @__PURE__ */ new Date() > record2.expiry) {
+      otpStore.delete(lowerEmail);
+      res.status(400).json({ error: "OTP has expired. Please request a new one." });
+      return;
+    }
+    record2.attempts += 1;
+    if (record2.attempts > 5) {
+      otpStore.delete(lowerEmail);
+      res.status(400).json({ error: "Too many wrong attempts. Request a new OTP." });
+      return;
+    }
+    if (record2.code !== otp.toString()) {
+      res.status(400).json({ error: `Incorrect OTP. ${5 - record2.attempts} attempt(s) remaining.` });
+      return;
+    }
+    otpStore.delete(lowerEmail);
+    const [existingPhone] = await db.select().from(usersTable).where(eq(usersTable.phone, phone));
+    if (existingPhone) {
+      res.status(400).json({ error: "Phone number already registered" });
+      return;
+    }
+    const [existingEmail] = await db.select().from(usersTable).where(eq(usersTable.email, lowerEmail));
+    if (existingEmail) {
+      res.status(400).json({ error: "Email already registered" });
+      return;
+    }
+    const passwordHash = await bcryptjs_default.hash(password, 10);
+    const myReferralCode = nanoid3(8).toUpperCase();
+    const [user] = await db.insert(usersTable).values({
+      name,
+      phone,
+      email: lowerEmail,
+      passwordHash,
+      referralCode: myReferralCode,
+      referredBy: referralCode || null,
+      isAdmin: false
+    }).returning();
+    const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
+    res.status(201).json({
+      user: { id: user.id, name: user.name, username: user.username, phone: user.phone, email: user.email, isAdmin: user.isAdmin, referralCode: user.referralCode, createdAt: user.createdAt },
+      token
+    });
+  } catch (err) {
+    req.log.error({ err }, "Register error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router2.post("/login-otp", async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+    if (!identifier || !otp) {
+      res.status(400).json({ error: "Phone/email and OTP are required" });
+      return;
+    }
+    const [user] = await db.select().from(usersTable).where(
+      or(eq(usersTable.phone, identifier), eq(usersTable.email, identifier.toLowerCase()))
+    );
+    if (!user || !user.email) {
+      res.status(401).json({ error: "Account not found" });
+      return;
+    }
+    const record2 = otpStore.get(user.email);
+    if (!record2) {
+      res.status(400).json({ error: "OTP not found or expired. Please request a new one." });
+      return;
+    }
+    if (/* @__PURE__ */ new Date() > record2.expiry) {
+      otpStore.delete(user.email);
+      res.status(400).json({ error: "OTP expired. Request a new one." });
+      return;
+    }
+    record2.attempts += 1;
+    if (record2.attempts > 5) {
+      otpStore.delete(user.email);
+      res.status(400).json({ error: "Too many attempts. Request a new OTP." });
+      return;
+    }
+    if (record2.code !== otp.toString()) {
+      res.status(400).json({ error: `Incorrect OTP. ${5 - record2.attempts} attempt(s) remaining.` });
+      return;
+    }
+    otpStore.delete(user.email);
+    const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
+    res.json({
+      user: { id: user.id, name: user.name, username: user.username, phone: user.phone, email: user.email, isAdmin: user.isAdmin, referralCode: user.referralCode, createdAt: user.createdAt },
+      token
+    });
+  } catch (err) {
+    req.log.error({ err }, "Login OTP error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router2.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -61633,18 +61932,13 @@ router2.post("/login", async (req, res) => {
       return;
     }
     const [user] = await db.select().from(usersTable).where(
-      or(
-        eq(usersTable.username, username),
-        eq(usersTable.phone, username)
-      )
+      or(eq(usersTable.username, username), eq(usersTable.phone, username))
     );
     if (!user) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
-    const HARDCODED = {
-      "admin": "admin123"
-    };
+    const HARDCODED = { "admin": "admin123" };
     const hardcoded = HARDCODED[username];
     const valid = hardcoded ? password === hardcoded : await bcryptjs_default.compare(password, user.passwordHash);
     if (!valid) {
@@ -61653,59 +61947,11 @@ router2.post("/login", async (req, res) => {
     }
     const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
     res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        phone: user.phone,
-        isAdmin: user.isAdmin,
-        referralCode: user.referralCode,
-        createdAt: user.createdAt
-      },
+      user: { id: user.id, name: user.name, username: user.username, phone: user.phone, email: user.email, isAdmin: user.isAdmin, referralCode: user.referralCode, createdAt: user.createdAt },
       token
     });
   } catch (err) {
     req.log.error({ err }, "Login error");
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-router2.post("/register", async (req, res) => {
-  try {
-    const { phone, password, name, referralCode } = req.body;
-    if (!phone || !password || !name) {
-      res.status(400).json({ error: "Phone, password and name required" });
-      return;
-    }
-    const [existing] = await db.select().from(usersTable).where(eq(usersTable.phone, phone));
-    if (existing) {
-      res.status(400).json({ error: "Phone number already registered" });
-      return;
-    }
-    const passwordHash = await bcryptjs_default.hash(password, 10);
-    const myReferralCode = nanoid3(8).toUpperCase();
-    const [user] = await db.insert(usersTable).values({
-      name,
-      phone,
-      passwordHash,
-      referralCode: myReferralCode,
-      referredBy: referralCode || null,
-      isAdmin: false
-    }).returning();
-    const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
-    res.status(201).json({
-      user: {
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        phone: user.phone,
-        isAdmin: user.isAdmin,
-        referralCode: user.referralCode,
-        createdAt: user.createdAt
-      },
-      token
-    });
-  } catch (err) {
-    req.log.error({ err }, "Register error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -61719,15 +61965,7 @@ router2.get("/me", requireAuth, async (req, res) => {
       res.status(401).json({ error: "User not found" });
       return;
     }
-    res.json({
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      phone: user.phone,
-      isAdmin: user.isAdmin,
-      referralCode: user.referralCode,
-      createdAt: user.createdAt
-    });
+    res.json({ id: user.id, name: user.name, username: user.username, phone: user.phone, email: user.email, isAdmin: user.isAdmin, referralCode: user.referralCode, createdAt: user.createdAt });
   } catch (err) {
     req.log.error({ err }, "Get me error");
     res.status(500).json({ error: "Internal server error" });
@@ -62872,24 +63110,6 @@ router11.use(pay0_default);
 router11.use(settings_default);
 var routes_default = router11;
 
-// src/lib/logger.ts
-var import_pino = __toESM(require_pino(), 1);
-var isProduction = process.env.NODE_ENV === "production";
-var logger = (0, import_pino.default)({
-  level: process.env.LOG_LEVEL ?? "info",
-  redact: [
-    "req.headers.authorization",
-    "req.headers.cookie",
-    "res.headers['set-cookie']"
-  ],
-  ...isProduction ? {} : {
-    transport: {
-      target: "pino-pretty",
-      options: { colorize: true }
-    }
-  }
-});
-
 // src/app.ts
 var app = (0, import_express12.default)();
 app.use(
@@ -62925,6 +63145,14 @@ var PLAN_IMAGES = {
   Platinum: "https://lh3.googleusercontent.com/d/1G7RGSDX0ZrfzyQWY_NG0U8iYh2WzAdQN",
   Diamond: "https://lh3.googleusercontent.com/d/1SDAdZJ-OuwUh1IeC1grksgzVBw3V1G17"
 };
+async function runMigrations() {
+  try {
+    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE`);
+    logger.info("Migration OK: users.email column ensured");
+  } catch (err) {
+    logger.error({ err }, "Migration warning (non-fatal)");
+  }
+}
 async function seedDefaultAdmin() {
   try {
     const [existingAdmin] = await db.select().from(usersTable).where(sql`is_admin = true`).limit(1);
@@ -63079,7 +63307,26 @@ async function accrueInterest() {
 function startInterestCron() {
   const INTERVAL_MS = 24 * 60 * 60 * 1e3;
   logger.info("Interest accrual cron started (runs every 24h)");
-  const scheduleNext = () => {
+  const runStartupCheck = async () => {
+    try {
+      const todayStart = /* @__PURE__ */ new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const result = await db.execute(
+        sql`SELECT id FROM transactions WHERE type = 'earning' AND created_at >= ${todayStart.toISOString()} LIMIT 1`
+      );
+      const rows = result.rows;
+      if (!rows || rows.length === 0) {
+        logger.info("No interest credited today \u2014 running accrual now on startup");
+        await accrueInterest();
+      } else {
+        logger.info("Interest already credited today \u2014 skipping startup accrual");
+      }
+    } catch (err) {
+      logger.error({ err }, "Startup interest check error");
+    }
+  };
+  runStartupCheck();
+  const scheduleNextMidnight = () => {
     const now = /* @__PURE__ */ new Date();
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
@@ -63089,7 +63336,7 @@ function startInterestCron() {
       setInterval(accrueInterest, INTERVAL_MS);
     }, msUntilMidnight);
   };
-  scheduleNext();
+  scheduleNextMidnight();
 }
 
 // src/index.ts
@@ -63109,7 +63356,7 @@ app_default.listen(port, (err) => {
     process.exit(1);
   }
   logger.info({ port }, "Server listening");
-  seedDefaultAdmin();
+  runMigrations().then(() => seedDefaultAdmin());
   startInterestCron();
   startPay0StatusChecker();
 });
