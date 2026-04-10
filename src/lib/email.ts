@@ -1,35 +1,16 @@
-import { google } from "googleapis";
+import nodemailer from "nodemailer";
 import { logger } from "./logger.js";
 
-async function sendViaGmailAPI(to: string, subject: string, html: string, text: string) {
-  const clientId     = (process.env.GMAIL_CLIENT_ID     || "").trim();
-  const clientSecret = (process.env.GMAIL_CLIENT_SECRET || "").trim();
-  const refreshToken = (process.env.GMAIL_REFRESH_TOKEN || "").trim();
-  const sender       = (process.env.EMAIL               || "").trim();
-
-  if (!clientId || !clientSecret || !refreshToken || !sender) return false;
-
-  const oAuth2Client = new google.auth.OAuth2(
-    clientId,
-    clientSecret,
-    "https://developers.google.com/oauthplayground"
-  );
-  oAuth2Client.setCredentials({ refresh_token: refreshToken });
-
-  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
-
-  const messageParts = [
-    `From: "MoneySetu" <${sender}>`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: text/html; charset=utf-8`,
-    ``,
-    html,
-  ];
-  const raw = Buffer.from(messageParts.join("\n")).toString("base64url");
-  await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
-  return true;
+function createTransport() {
+  const user = (process.env.EMAIL             || "").trim();
+  const pass = (process.env.EMAIL_APP_PASSWORD || "").trim();
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass },
+  });
 }
 
 const OTP_HTML = (otp: string) => `
@@ -88,15 +69,18 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
   const subject = "Your MoneySetu verification code";
   const text    = `Your MoneySetu verification code is: ${otp}\n\nExpires in 5 minutes. Do not share it.`;
 
+  const transport = createTransport();
+  if (!transport) {
+    logger.warn({ to }, `Email not configured — OTP for dev: ${otp}`);
+    return;
+  }
+
   try {
-    const sent = await sendViaGmailAPI(to, subject, OTP_HTML(otp), text);
-    if (sent) {
-      logger.info({ to }, "OTP email sent via Gmail API");
-      return;
-    }
-    logger.warn({ to }, `Gmail API not configured — OTP: ${otp}`);
+    const from = (process.env.EMAIL || "").trim();
+    await transport.sendMail({ from: `"MoneySetu" <${from}>`, to, subject, html: OTP_HTML(otp), text });
+    logger.info({ to }, "OTP email sent via SMTP");
   } catch (err: any) {
-    logger.error({ err, to }, `Gmail API failed — OTP for ${to}: ${otp}`);
+    logger.error({ err, to }, "SMTP send failed");
     throw new Error(`Email send failed: ${err?.message}`);
   }
 }
