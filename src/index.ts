@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { seedDefaultAdmin, runMigrations } from "./lib/seed.js";
 import { startInterestCron } from "./lib/interestAccrual.js";
 import { startPay0StatusChecker } from "./routes/pay0.js";
+import { pool } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
 
@@ -28,4 +29,12 @@ app.listen(port, (err) => {
   runMigrations().then(() => seedDefaultAdmin());
   startInterestCron();
   startPay0StatusChecker();
+
+  // Keep Neon DB connection alive — pings every 4 min to prevent cold starts
+  const pingDb = () =>
+    pool.query("SELECT 1").catch((e: Error) =>
+      logger.warn({ err: e.message }, "DB keepalive ping failed"),
+    );
+  pingDb();
+  setInterval(pingDb, 4 * 60 * 1000);
 });

@@ -61571,7 +61571,14 @@ if (!process.env.DATABASE_URL) {
     "DATABASE_URL must be set. Did you forget to provision a database?"
   );
 }
-var pool = new Pool3({ connectionString: process.env.DATABASE_URL });
+var pool = new Pool3({
+  connectionString: process.env.DATABASE_URL,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 1e4,
+  connectionTimeoutMillis: 1e4,
+  idleTimeoutMillis: 6e4,
+  max: 5
+});
 var db = drizzle(pool, { schema: schema_exports });
 
 // src/middlewares/auth.ts
@@ -63346,6 +63353,11 @@ app_default.listen(port, (err) => {
   runMigrations().then(() => seedDefaultAdmin());
   startInterestCron();
   startPay0StatusChecker();
+  const pingDb = () => pool.query("SELECT 1").catch(
+    (e) => logger.warn({ err: e.message }, "DB keepalive ping failed")
+  );
+  pingDb();
+  setInterval(pingDb, 4 * 60 * 1e3);
 });
 /*! Bundled license information:
 
