@@ -12,6 +12,112 @@ const PLAN_IMAGES: Record<string, string> = {
   Diamond:  "https://lh3.googleusercontent.com/d/1SDAdZJ-OuwUh1IeC1grksgzVBw3V1G17",
 };
 
+export async function runMigrations() {
+  try {
+    // Create all tables (safe on fresh DB — IF NOT EXISTS skips existing ones)
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id               SERIAL PRIMARY KEY,
+        name             TEXT NOT NULL,
+        username         TEXT UNIQUE,
+        phone            TEXT UNIQUE,
+        email            TEXT UNIQUE,
+        password_hash    TEXT NOT NULL,
+        is_admin         BOOLEAN NOT NULL DEFAULT false,
+        referral_code    TEXT NOT NULL UNIQUE,
+        referred_by      TEXT,
+        balance          NUMERIC(15,2) NOT NULL DEFAULT 0,
+        total_invested   NUMERIC(15,2) NOT NULL DEFAULT 0,
+        total_earnings   NUMERIC(15,2) NOT NULL DEFAULT 0,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS investment_plans (
+        id                    SERIAL PRIMARY KEY,
+        name                  TEXT NOT NULL,
+        description           TEXT NOT NULL,
+        min_amount            NUMERIC(15,2) NOT NULL,
+        max_amount            NUMERIC(15,2) NOT NULL,
+        daily_return_percent  NUMERIC(5,2) NOT NULL,
+        duration_days         INTEGER NOT NULL,
+        is_active             BOOLEAN NOT NULL DEFAULT true,
+        image_url             TEXT,
+        created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS user_investments (
+        id                    SERIAL PRIMARY KEY,
+        user_id               INTEGER NOT NULL REFERENCES users(id),
+        plan_id               INTEGER NOT NULL REFERENCES investment_plans(id),
+        amount                NUMERIC(15,2) NOT NULL,
+        daily_return_percent  NUMERIC(5,2) NOT NULL,
+        duration_days         INTEGER NOT NULL,
+        status                TEXT NOT NULL DEFAULT 'active',
+        start_date            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        end_date              TIMESTAMPTZ NOT NULL,
+        total_earned          NUMERIC(15,2) NOT NULL DEFAULT 0,
+        created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        type            TEXT NOT NULL,
+        amount          NUMERIC(15,2) NOT NULL,
+        status          TEXT NOT NULL DEFAULT 'pending',
+        payment_method  TEXT,
+        notes           TEXT,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS referral_commissions (
+        id             SERIAL PRIMARY KEY,
+        user_id        INTEGER NOT NULL REFERENCES users(id),
+        from_user_id   INTEGER NOT NULL REFERENCES users(id),
+        level          INTEGER NOT NULL,
+        amount         NUMERIC(15,2) NOT NULL,
+        source_amount  NUMERIC(15,2) NOT NULL,
+        type           TEXT NOT NULL DEFAULT 'deposit',
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        id          SERIAL PRIMARY KEY,
+        key         TEXT NOT NULL UNIQUE,
+        value       TEXT NOT NULL DEFAULT '',
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS fake_activity (
+        id          SERIAL PRIMARY KEY,
+        user_name   TEXT NOT NULL,
+        type        TEXT NOT NULL,
+        amount      NUMERIC(15,2) NOT NULL,
+        city        TEXT,
+        is_active   BOOLEAN NOT NULL DEFAULT true,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    logger.info("Migration OK: all tables ensured");
+  } catch (err) {
+    logger.error({ err }, "Migration warning (non-fatal)");
+  }
+}
+
 export async function seedDefaultAdmin() {
   try {
     // Always ensure the admin user exists with username="admin"
