@@ -1,3 +1,7 @@
+// Force IPv4 DNS resolution — Gmail SMTP hangs on IPv6 in many cloud environments
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedDefaultAdmin, runMigrations } from "./lib/seed.js";
@@ -40,11 +44,11 @@ if (Number.isNaN(port) || port <= 0) {
   startInterestCron();
   startPay0StatusChecker();
 
-  // Keep Neon DB alive — ping every 4 min so it never goes cold
+  // Keep Neon DB alive — ping every 2 min so it never goes cold
   setInterval(
     () => pool.query("SELECT 1").catch((e: Error) =>
       logger.warn({ err: e.message }, "DB keepalive ping failed")),
-    4 * 60 * 1000,
+    2 * 60 * 1000,
   );
 })().catch(err => {
   logger.error({ err }, "Fatal startup error");
