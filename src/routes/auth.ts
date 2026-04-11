@@ -61,8 +61,12 @@ router.post("/send-otp", async (req, res) => {
       }
       const code = generateOtp();
       otpStore.set(lowerEmail, { code, expiry: new Date(Date.now() + 5 * 60 * 1000), attempts: 0 });
-      await sendOtpEmail(lowerEmail, code);
-      res.json({ success: true, message: `OTP sent to ${lowerEmail}` });
+      const sent = await sendOtpEmail(lowerEmail, code);
+      if (sent) {
+        res.json({ success: true, message: "OTP sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send OTP, try again" });
+      }
       return;
     }
 
@@ -89,8 +93,12 @@ router.post("/send-otp", async (req, res) => {
     }
     const code = generateOtp();
     otpStore.set(user.email, { code, expiry: new Date(Date.now() + 5 * 60 * 1000), attempts: 0, userId: user.id });
-    await sendOtpEmail(user.email, code);
-    res.json({ success: true, message: "OTP sent to your registered email" });
+    const sent = await sendOtpEmail(user.email, code);
+    if (sent) {
+      res.json({ success: true, message: "OTP sent successfully" });
+    } else {
+      res.status(500).json({ success: false, message: "Failed to send OTP, try again" });
+    }
   } catch (err) {
     req.log.error({ err }, "Send OTP error");
     res.status(500).json({ error: "Failed to send OTP. Check email configuration." });
