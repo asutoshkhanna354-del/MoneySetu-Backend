@@ -61987,9 +61987,7 @@ router2.post("/login", async (req, res) => {
       res.status(401).json({ error: "Invalid email or password" });
       return;
     }
-    const HARDCODED = { "admin": "admin123" };
-    const hardcoded = HARDCODED[identifier];
-    const valid = hardcoded ? password === hardcoded : user.passwordHash ? await bcryptjs_default.compare(password, user.passwordHash) : false;
+    const valid = user.passwordHash ? await bcryptjs_default.compare(password, user.passwordHash) : false;
     if (!valid) {
       res.status(401).json({ error: "Invalid email or password" });
       return;

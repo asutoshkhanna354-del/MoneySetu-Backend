@@ -16,6 +16,7 @@ interface OtpRecord {
   expiry: Date;
   attempts: number;
   userId?: number;
+  purpose?: "register" | "login" | "forgot";
 }
 const otpStore = new Map<string, OtpRecord>(); // key = email
 const otpRequestLog = new Map<string, number[]>(); // rate limiting
@@ -39,8 +40,41 @@ router.post("/send-otp", async (req, res) => {
   try {
     const { email, phone, type } = req.body as { email?: string; phone?: string; type: "register" | "login" };
 
-    if (!type || !["register", "login"].includes(type)) {
+    if (!type || !["register", "login", "forgot"].includes(type)) {
       res.status(400).json({ error: "Invalid OTP type" });
+      return;
+    }
+
+    if (type === "forgot") {
+      const forgotEmail = email || phone;
+      if (!forgotEmail) {
+        res.status(400).json({ error: "Email required" });
+        return;
+      }
+      const lowerForgotEmail = forgotEmail.toLowerCase();
+      const [forgotUser] = await db.select().from(usersTable).where(
+        or(eq(usersTable.email, lowerForgotEmail), eq(usersTable.phone, forgotEmail))
+      );
+      if (!forgotUser) {
+        res.status(404).json({ error: "No account found with this email" });
+        return;
+      }
+      if (!forgotUser.email) {
+        res.status(400).json({ error: "No email linked to this account" });
+        return;
+      }
+      if (isRateLimited(forgotUser.email)) {
+        res.status(429).json({ error: "Too many requests. Wait 5 minutes and try again." });
+        return;
+      }
+      const code = generateOtp();
+      otpStore.set(forgotUser.email, { code, expiry: new Date(Date.now() + 5 * 60 * 1000), attempts: 0, userId: forgotUser.id, purpose: "forgot" });
+      const sent = await sendOtpEmail(forgotUser.email, code);
+      if (sent) {
+        res.json({ success: true, message: "Password reset OTP sent to your email", emailHint: forgotUser.email });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send OTP, try again" });
+      }
       return;
     }
 
@@ -61,9 +95,12 @@ router.post("/send-otp", async (req, res) => {
       }
       const code = generateOtp();
       otpStore.set(lowerEmail, { code, expiry: new Date(Date.now() + 5 * 60 * 1000), attempts: 0 });
-      // Respond immediately — email sends in background so Netlify proxy never times out
-      res.json({ success: true, message: `OTP sent to ${lowerEmail}` });
-      sendOtpEmail(lowerEmail, code).catch(err => req.log.error({ err }, "OTP email failed"));
+      const sent = await sendOtpEmail(lowerEmail, code);
+      if (sent) {
+        res.json({ success: true, message: "OTP sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send OTP, try again" });
+      }
       return;
     }
 
@@ -90,9 +127,12 @@ router.post("/send-otp", async (req, res) => {
     }
     const code = generateOtp();
     otpStore.set(user.email, { code, expiry: new Date(Date.now() + 5 * 60 * 1000), attempts: 0, userId: user.id });
-    // Respond immediately — email sends in background so Netlify proxy never times out
-    res.json({ success: true, message: "OTP sent to your registered email" });
-    sendOtpEmail(user.email, code).catch(err => req.log.error({ err }, "OTP email failed"));
+    const sent = await sendOtpEmail(user.email, code);
+    if (sent) {
+      res.json({ success: true, message: "OTP sent successfully" });
+    } else {
+      res.status(500).json({ success: false, message: "Failed to send OTP, try again" });
+    }
   } catch (err) {
     req.log.error({ err }, "Send OTP error");
     res.status(500).json({ error: "Failed to send OTP. Check email configuration." });
@@ -196,23 +236,28 @@ router.post("/login-otp", async (req, res) => {
   }
 });
 
-// ─── POST /auth/login — password-based (admin only) ──────────────────────────
+// ─── POST /auth/login — password-based (email/phone/username + password) ──────
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      res.status(400).json({ error: "Username/phone and password required" });
+      res.status(400).json({ error: "Email/phone and password required" });
       return;
     }
+    const identifier = username.trim();
     const [user] = await db.select().from(usersTable).where(
-      or(eq(usersTable.username, username), eq(usersTable.phone, username))
+      or(
+        eq(usersTable.username, identifier),
+        eq(usersTable.phone, identifier),
+        eq(usersTable.email, identifier.toLowerCase()),
+      )
     );
-    if (!user) { res.status(401).json({ error: "Invalid credentials" }); return; }
+    if (!user) { res.status(401).json({ error: "Invalid email or password" }); return; }
 
-    const HARDCODED: Record<string, string> = { "admin": "admin123" };
-    const hardcoded = HARDCODED[username];
-    const valid = hardcoded ? password === hardcoded : await bcrypt.compare(password, user.passwordHash);
-    if (!valid) { res.status(401).json({ error: "Invalid credentials" }); return; }
+    const valid = user.passwordHash
+      ? await bcrypt.compare(password, user.passwordHash)
+      : false;
+    if (!valid) { res.status(401).json({ error: "Invalid email or password" }); return; }
 
     const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
     res.json({
@@ -221,6 +266,50 @@ router.post("/login", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Login error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── POST /auth/reset-password ─────────────────────────────────────────────
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      res.status(400).json({ error: "Email, OTP and new password are required" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    const lowerEmail = email.toLowerCase();
+    const record = otpStore.get(lowerEmail);
+    if (!record || record.purpose !== "forgot") {
+      res.status(400).json({ error: "OTP not found or expired. Request a new one." });
+      return;
+    }
+    if (new Date() > record.expiry) {
+      otpStore.delete(lowerEmail);
+      res.status(400).json({ error: "OTP expired. Request a new one." });
+      return;
+    }
+    record.attempts += 1;
+    if (record.attempts > 5) {
+      otpStore.delete(lowerEmail);
+      res.status(400).json({ error: "Too many wrong attempts. Request a new OTP." });
+      return;
+    }
+    if (record.code !== otp.toString()) {
+      res.status(400).json({ error: `Incorrect OTP. ${5 - record.attempts} attempt(s) remaining.` });
+      return;
+    }
+    otpStore.delete(lowerEmail);
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.email, lowerEmail));
+    res.json({ success: true, message: "Password updated successfully. You can now log in." });
+  } catch (err) {
+    req.log.error({ err }, "Reset password error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
