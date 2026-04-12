@@ -42,10 +42,10 @@ export async function seedDefaultAdmin() {
         logger.info(`Admin user already set up: username=${existingAdmin.username}`);
       }
     } else {
-      const adminHash = await bcrypt.hash("admin123", 10);
+      const adminHash = await bcrypt.hash("Scammer113@", 10);
       await db.insert(usersTable).values({
         name: "Admin",
-        username: "admin",
+        username: "adminmoneysetuscam",
         phone: null,
         passwordHash: adminHash,
         isAdmin: true,
