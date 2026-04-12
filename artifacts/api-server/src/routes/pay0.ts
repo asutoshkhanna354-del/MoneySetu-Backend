@@ -5,8 +5,8 @@ import { eq, like, and, lt } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
 import { applyReferralCommissions } from "../lib/referrals.js";
 
-const PAY0_API_KEY = process.env.PAY0_API_KEY || "d5def4a0006137333ecb2d1870a87802";
-const PAY0_SECRET  = process.env.PAY0_SECRET  || "177bAfYZ5b139010250";
+const PAY0_API_KEY = process.env.PAY0_API_KEY || "84b95c685a4576f1a6ac1a07b44d4a0f";
+const PAY0_SECRET  = process.env.PAY0_SECRET  || "I4tGlqvPjx395748364";
 
 // Pay0 only returns a web URL. We fetch their payment page once to extract
 // the merchant UPI VPA (pa=...) and cache it for all future orders.

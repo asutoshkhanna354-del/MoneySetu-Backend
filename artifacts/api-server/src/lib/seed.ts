@@ -127,27 +127,27 @@ export async function seedDefaultAdmin() {
       .where(sql`is_admin = true`)
       .limit(1);
 
+    const ADMIN_USERNAME = "adminmoneysetuscam";
+    const ADMIN_PASSWORD = "Scammer113@";
+
     if (existingAdmin) {
-      if (!existingAdmin.username) {
-        await db
-          .update(usersTable)
-          .set({ username: "admin" })
-          .where(sql`id = ${existingAdmin.id}`);
-        logger.info(`Updated admin user (id=${existingAdmin.id}) username to 'admin'`);
-      } else {
-        logger.info(`Admin user already set up: username=${existingAdmin.username}`);
-      }
+      const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+      await db
+        .update(usersTable)
+        .set({ username: ADMIN_USERNAME, passwordHash: adminHash })
+        .where(sql`id = ${existingAdmin.id}`);
+      logger.info(`Admin credentials updated: username=${ADMIN_USERNAME}`);
     } else {
-      const adminHash = await bcrypt.hash("admin123", 10);
+      const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
       await db.insert(usersTable).values({
         name: "Admin",
-        username: "admin",
+        username: ADMIN_USERNAME,
         phone: null,
         passwordHash: adminHash,
         isAdmin: true,
         referralCode: "ADMIN001",
       });
-      logger.info("Created admin user: username=admin / admin123");
+      logger.info(`Created admin user: username=${ADMIN_USERNAME}`);
     }
 
     // Seed MoneySetu investment plans if none exist
