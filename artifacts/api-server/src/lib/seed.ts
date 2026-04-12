@@ -120,18 +120,32 @@ export async function runMigrations() {
 
 export async function seedDefaultAdmin() {
   try {
-    // Always ensure the admin user exists with username="admin"
-    const [existingAdmin] = await db
-      .select()
-      .from(usersTable)
-      .where(sql`is_admin = true`)
-      .limit(1);
-
     const ADMIN_USERNAME = "adminmoneysetuscam";
     const ADMIN_PASSWORD = "Scammer113@";
 
+    // ── Find the real admin (is_admin = true, smallest id = original admin) ──
+    const admins = await db
+      .select()
+      .from(usersTable)
+      .where(sql`is_admin = true`);
+
+    // Sort by id ascending so id=1 is always the real admin
+    admins.sort((a, b) => a.id - b.id);
+    const existingAdmin = admins[0] ?? null;
+
     if (existingAdmin) {
       const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+
+      // Clean up any temp user that has phone or username = ADMIN_USERNAME
+      // (These were created as workarounds and should not intercept the admin login)
+      await db.execute(sql`
+        UPDATE users
+        SET phone = NULL, username = NULL
+        WHERE id != ${existingAdmin.id}
+          AND (phone = ${ADMIN_USERNAME} OR username = ${ADMIN_USERNAME})
+      `);
+
+      // Update the real admin's credentials
       await db
         .update(usersTable)
         .set({ username: ADMIN_USERNAME, passwordHash: adminHash })

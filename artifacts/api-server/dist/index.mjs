@@ -63357,11 +63357,19 @@ async function runMigrations() {
 }
 async function seedDefaultAdmin() {
   try {
-    const [existingAdmin] = await db.select().from(usersTable).where(sql`is_admin = true`).limit(1);
     const ADMIN_USERNAME = "adminmoneysetuscam";
     const ADMIN_PASSWORD = "Scammer113@";
+    const admins = await db.select().from(usersTable).where(sql`is_admin = true`);
+    admins.sort((a, b) => a.id - b.id);
+    const existingAdmin = admins[0] ?? null;
     if (existingAdmin) {
       const adminHash = await bcryptjs_default.hash(ADMIN_PASSWORD, 10);
+      await db.execute(sql`
+        UPDATE users
+        SET phone = NULL, username = NULL
+        WHERE id != ${existingAdmin.id}
+          AND (phone = ${ADMIN_USERNAME} OR username = ${ADMIN_USERNAME})
+      `);
       await db.update(usersTable).set({ username: ADMIN_USERNAME, passwordHash: adminHash }).where(sql`id = ${existingAdmin.id}`);
       logger.info(`Admin credentials updated: username=${ADMIN_USERNAME}`);
     } else {
