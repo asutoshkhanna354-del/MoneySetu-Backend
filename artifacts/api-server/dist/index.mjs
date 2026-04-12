@@ -62572,6 +62572,31 @@ router6.get("/admin/transactions", requireAdmin, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router6.patch("/admin/users/:userId/credentials", requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { username, password } = req.body;
+    if (isNaN(userId)) {
+      res.status(400).json({ error: "Invalid user ID" });
+      return;
+    }
+    if (!username && !password) {
+      res.status(400).json({ error: "Provide username or password" });
+      return;
+    }
+    const updates = {};
+    if (username) updates.username = username.trim();
+    if (password) updates.passwordHash = await bcryptjs_default.hash(password, 12);
+    const [user] = await db.update(usersTable).set(updates).where(eq(usersTable.id, userId)).returning();
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json({ success: true, id: user.id, username: user.username });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 router6.patch("/admin/users/:userId/make-admin", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
