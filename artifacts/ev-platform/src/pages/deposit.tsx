@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Loader2, ShieldCheck, Lock, X, CheckCircle2, ChevronRight } from "lucide-react";
+import { apiFetch } from "@/lib/apiFetch";
 import { QRCodeSVG } from "qrcode.react";
 
 const depositSchema = z.object({
@@ -254,7 +255,7 @@ function PaymentQRModal({
 
   const checkStatus = useCallback(async () => {
     try {
-      const res = await fetch(`/api/pay0/order-status/${orderId}`, {
+      const res = await apiFetch(`/api/pay0/order-status/${orderId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) return;
@@ -551,7 +552,7 @@ export default function Deposit() {
 
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch("/api/pay0/create-order", {
+      const res = await apiFetch("/api/pay0/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ amount: amt }),
