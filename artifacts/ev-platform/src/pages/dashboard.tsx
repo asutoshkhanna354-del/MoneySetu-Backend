@@ -1,18 +1,45 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetBalance, useGetTransactions, useGetUserInvestments } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Clock, Users, Zap, PlusCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Clock, Users, Zap, PlusCircle, Gift, X, Loader2, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 
 export default function Dashboard() {
   const { data: balanceData, isLoading: balanceLoading } = useGetBalance();
   const { data: txData } = useGetTransactions();
   const { data: investments } = useGetUserInvestments();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [giftOpen, setGiftOpen] = useState(false);
+  const [giftCode, setGiftCode] = useState("");
+  const [giftLoading, setGiftLoading] = useState(false);
+  const [giftSuccess, setGiftSuccess] = useState<{ amount: number } | null>(null);
+
+  const handleRedeemGift = async () => {
+    if (!giftCode.trim()) return;
+    setGiftLoading(true);
+    try {
+      const res = await apiFetch("/api/gift-code/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("ev_token")}` },
+        body: JSON.stringify({ code: giftCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ title: "Redemption failed", description: data.error, variant: "destructive" }); return; }
+      setGiftSuccess({ amount: data.amount });
+      queryClient.invalidateQueries();
+    } catch { toast({ title: "Network error", variant: "destructive" }); }
+    finally { setGiftLoading(false); }
+  };
 
   const recentTxs = txData?.slice(0, 5) || [];
   const activeInvestments = investments?.filter(i => i.status === 'active') || [];
@@ -103,13 +130,13 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { href: "/deposit",      icon: ArrowDownRight, label: "Deposit",   iconColor: "#60a5fa", bg: "rgba(59,130,246,0.12)"  },
-            { href: "/invest",       icon: Zap,            label: "Invest",    iconColor: "#a855f7", bg: "rgba(168,85,247,0.12)"  },
-            { href: "/withdraw",     icon: ArrowUpRight,   label: "Investments",iconColor: "#fb923c", bg: "rgba(249,115,22,0.12)"  },
-            { href: "/referral",     icon: Users,          label: "Refer",     iconColor: "#c084fc", bg: "rgba(192,132,252,0.12)" },
-            { href: "/transactions", icon: Activity,       label: "History",   iconColor: "#4ade80", bg: "rgba(74,222,128,0.12)"  },
+            { href: "/deposit",      icon: ArrowDownRight, label: "Deposit",     iconColor: "#60a5fa", bg: "rgba(59,130,246,0.12)"  },
+            { href: "/invest",       icon: Zap,            label: "Invest",      iconColor: "#a855f7", bg: "rgba(168,85,247,0.12)"  },
+            { href: "/withdraw",     icon: ArrowUpRight,   label: "Investments", iconColor: "#fb923c", bg: "rgba(249,115,22,0.12)"  },
+            { href: "/referral",     icon: Users,          label: "Refer",       iconColor: "#c084fc", bg: "rgba(192,132,252,0.12)" },
+            { href: "/transactions", icon: Activity,       label: "History",     iconColor: "#4ade80", bg: "rgba(74,222,128,0.12)"  },
           ].map((a) => (
             <Link key={a.href} href={a.href}>
               <div
@@ -125,7 +152,98 @@ export default function Dashboard() {
               </div>
             </Link>
           ))}
+          {/* Gift Code Button */}
+          <div
+            onClick={() => { setGiftOpen(true); setGiftSuccess(null); setGiftCode(""); }}
+            className="p-4 flex flex-col items-center justify-center space-y-2 cursor-pointer transition-all hover:-translate-y-1 rounded-2xl"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
+          >
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(234,179,8,0.12)", boxShadow: "0 0 16px rgba(234,179,8,0.12)" }}>
+              <Gift className="w-6 h-6" style={{ color: "#eab308" }} />
+            </div>
+            <span className="font-bold text-xs text-center" style={{ color: "rgba(255,255,255,0.6)" }}>Gift Code</span>
+          </div>
         </div>
+
+        {/* Gift Code Modal */}
+        <AnimatePresence>
+          {giftOpen && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center px-5"
+              style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+              onClick={() => setGiftOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-[320px] rounded-3xl overflow-hidden"
+                style={{ background: "linear-gradient(160deg,#0e0e20,#150e2c)", border: "1px solid rgba(234,179,8,0.25)", boxShadow: "0 0 40px rgba(234,179,8,0.15)" }}
+              >
+                <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg,#ca8a04,#eab308,#ca8a04)" }} />
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(234,179,8,0.15)" }}>
+                        <Gift className="w-4 h-4 text-yellow-400" />
+                      </div>
+                      <div>
+                        <p className="font-black text-white text-sm">Redeem Gift Code</p>
+                        <p className="text-[10px]" style={{ color: "rgba(234,179,8,0.6)" }}>Daily codes: ₹7 to ₹200</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setGiftOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <X className="w-3.5 h-3.5 text-white/50" />
+                    </button>
+                  </div>
+
+                  {giftSuccess ? (
+                    <div className="text-center py-4 space-y-3">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: "rgba(74,222,128,0.12)" }}>
+                        <CheckCircle className="w-8 h-8 text-emerald-400" />
+                      </div>
+                      <p className="font-black text-white text-lg">₹{giftSuccess.amount} Credited!</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>The amount has been added to your wallet.</p>
+                      <button onClick={() => setGiftOpen(false)}
+                        className="w-full py-2.5 rounded-xl font-bold text-sm"
+                        style={{ background: "linear-gradient(135deg,#ca8a04,#eab308)", color: "white" }}>
+                        Done
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>Enter Code</label>
+                        <input
+                          value={giftCode}
+                          onChange={e => setGiftCode(e.target.value.toUpperCase())}
+                          onKeyDown={e => e.key === "Enter" && handleRedeemGift()}
+                          placeholder="e.g. DAILY50"
+                          className="w-full h-12 rounded-xl px-4 text-center text-white font-mono font-black text-base tracking-widest outline-none"
+                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(234,179,8,0.2)", color: "white" }}
+                          autoFocus
+                        />
+                      </div>
+                      <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                        Requires an active investment plan. Each code can only be redeemed once per user.
+                      </p>
+                      <button
+                        onClick={handleRedeemGift}
+                        disabled={giftLoading || !giftCode.trim()}
+                        className="w-full h-12 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                        style={{ background: giftCode.trim() ? "linear-gradient(135deg,#ca8a04,#eab308)" : "rgba(255,255,255,0.05)", color: giftCode.trim() ? "white" : "rgba(255,255,255,0.2)", boxShadow: giftCode.trim() ? "0 0 24px rgba(234,179,8,0.3)" : "none" }}
+                      >
+                        {giftLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Gift className="w-4 h-4" /> Redeem Now</>}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Bottom row: Investments (left) + Recent Txs (right) */}
         <div className="grid md:grid-cols-2 gap-6">

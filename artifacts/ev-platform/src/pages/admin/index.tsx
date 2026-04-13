@@ -18,7 +18,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Check, X, ShieldAlert, Users, ArrowRightLeft, Zap, Plus, Pencil, Trash2, IndianRupee, Activity, Settings2 } from "lucide-react";
+import { Check, X, ShieldAlert, Users, ArrowRightLeft, Zap, Plus, Pencil, Trash2, IndianRupee, Activity, Settings2, Gift, ToggleLeft, ToggleRight } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -288,6 +288,128 @@ function FakeActivityList({ onDelete }: { onDelete: (id: number) => void }) {
   );
 }
 
+function GiftCodesPanel() {
+  const { toast } = useToast();
+  const [codes, setCodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newCode, setNewCode] = useState("");
+  const [newAmount, setNewAmount] = useState("");
+  const [maxUses, setMaxUses] = useState("100");
+  const [requiresPlan, setRequiresPlan] = useState(true);
+
+  const token = () => localStorage.getItem("ev_token");
+
+  const fetchCodes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/gift-codes", { headers: { Authorization: `Bearer ${token()}` } });
+      if (res.ok) setCodes(await res.json());
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchCodes(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCode.trim() || !newAmount) return;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/gift-codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ code: newCode.trim().toUpperCase(), amount: parseFloat(newAmount), maxUses: parseInt(maxUses) || 100, requiresPlan }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ title: "Error", description: data.error, variant: "destructive" }); return; }
+      toast({ title: `Gift code "${data.code}" created!` });
+      setNewCode(""); setNewAmount(""); setMaxUses("100");
+      fetchCodes();
+    } finally { setCreating(false); }
+  };
+
+  const handleToggle = async (id: number) => {
+    await fetch(`/api/admin/gift-codes/${id}/toggle`, { method: "PATCH", headers: { Authorization: `Bearer ${token()}` } });
+    fetchCodes();
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this gift code? This cannot be undone.")) return;
+    await fetch(`/api/admin/gift-codes/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
+    fetchCodes();
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(168,85,247,0.15)" }}>
+        <p className="font-bold text-sm text-white">Create New Gift Code</p>
+        <form onSubmit={handleCreate} className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-1">Code Name</label>
+              <Input value={newCode} onChange={e => setNewCode(e.target.value.toUpperCase())} placeholder="DAILY50" className="rounded-xl h-9 text-sm font-mono" />
+            </div>
+            <div>
+              <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-1">Amount ₹7–₹200</label>
+              <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="50" min={7} max={200} className="rounded-xl h-9 text-sm" />
+            </div>
+            <div>
+              <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-1">Max Uses</label>
+              <Input type="number" value={maxUses} onChange={e => setMaxUses(e.target.value)} placeholder="100" min={1} className="rounded-xl h-9 text-sm" />
+            </div>
+            <div className="flex flex-col justify-end">
+              <button type="button" onClick={() => setRequiresPlan(v => !v)}
+                className="h-9 flex items-center gap-2 px-3 rounded-xl text-xs font-bold transition-all"
+                style={{ background: requiresPlan ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${requiresPlan ? "rgba(168,85,247,0.3)" : "rgba(255,255,255,0.08)"}`, color: requiresPlan ? "#a855f7" : "rgba(255,255,255,0.35)" }}>
+                <ToggleRight className="w-4 h-4" />
+                {requiresPlan ? "Plan Required" : "No Plan Needed"}
+              </button>
+            </div>
+          </div>
+          <Button type="submit" disabled={creating || !newCode.trim() || !newAmount} className="w-full h-9 rounded-xl text-sm font-bold"
+            style={{ background: "linear-gradient(135deg,#6d28d9,#a855f7)" }}>
+            <Plus className="w-3.5 h-3.5 mr-1" />{creating ? "Creating…" : "Create Gift Code"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-sm text-white px-1">All Gift Codes ({codes.length})</p>
+        {loading && <p className="text-sm text-center py-6" style={{ color: "rgba(255,255,255,0.3)" }}>Loading…</p>}
+        {!loading && codes.length === 0 && <p className="text-sm text-center py-6" style={{ color: "rgba(255,255,255,0.3)" }}>No gift codes yet. Create one above.</p>}
+        {codes.map(c => (
+          <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-mono font-black text-sm text-white">{c.code}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: c.isActive ? "rgba(74,222,128,0.15)" : "rgba(239,68,68,0.15)", color: c.isActive ? "#4ade80" : "#f87171" }}>
+                  {c.isActive ? "Active" : "Inactive"}
+                </span>
+                {c.requiresPlan && <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(168,85,247,0.1)", color: "#a855f7" }}>Plan req.</span>}
+              </div>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                ₹{c.amount} · {c.uses}/{c.maxUses} redeemed
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button onClick={() => handleToggle(c.id)} title={c.isActive ? "Deactivate" : "Activate"}
+                className="w-8 h-8 rounded-xl flex items-center justify-center transition-opacity hover:opacity-70"
+                style={{ background: c.isActive ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.06)" }}>
+                {c.isActive ? <ToggleRight className="w-4 h-4 text-purple-400" /> : <ToggleLeft className="w-4 h-4 text-white/40" />}
+              </button>
+              <button onClick={() => handleDelete(c.id)} title="Delete"
+                className="w-8 h-8 rounded-xl flex items-center justify-center transition-opacity hover:opacity-70"
+                style={{ background: "rgba(239,68,68,0.1)" }}>
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
@@ -473,20 +595,23 @@ export default function AdminPanel() {
         </div>
 
         <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-12 rounded-2xl p-1 mb-6" style={{ background: "rgba(255,255,255,0.05)" }}>
-            <TabsTrigger value="transactions" className="rounded-xl font-bold text-[10px]">
+          <TabsList className="grid w-full grid-cols-3 h-auto rounded-2xl p-1 mb-4 gap-1" style={{ background: "rgba(255,255,255,0.05)" }}>
+            <TabsTrigger value="transactions" className="rounded-xl font-bold text-[10px] h-9">
               <ArrowRightLeft className="w-3.5 h-3.5 mr-1" /> Deposits
             </TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl font-bold text-[10px]">
+            <TabsTrigger value="users" className="rounded-xl font-bold text-[10px] h-9">
               <Users className="w-3.5 h-3.5 mr-1" /> Users
             </TabsTrigger>
-            <TabsTrigger value="plans" className="rounded-xl font-bold text-[10px]">
+            <TabsTrigger value="plans" className="rounded-xl font-bold text-[10px] h-9">
               <Zap className="w-3.5 h-3.5 mr-1" /> Plans
             </TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-xl font-bold text-[10px]">
+            <TabsTrigger value="giftcodes" className="rounded-xl font-bold text-[10px] h-9">
+              <Gift className="w-3.5 h-3.5 mr-1" /> Gift Codes
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-xl font-bold text-[10px] h-9">
               <Activity className="w-3.5 h-3.5 mr-1" /> Activity
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl font-bold text-[10px]">
+            <TabsTrigger value="settings" className="rounded-xl font-bold text-[10px] h-9">
               <Settings2 className="w-3.5 h-3.5 mr-1" /> Settings
             </TabsTrigger>
           </TabsList>
@@ -835,6 +960,14 @@ export default function AdminPanel() {
               toast({ title: "Deleted" });
               queryClient.invalidateQueries();
             }} />
+          </TabsContent>
+
+          {/* ── Gift Codes ── */}
+          <TabsContent value="giftcodes" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-bold text-lg">Daily Gift Codes</h3>
+            </div>
+            <GiftCodesPanel />
           </TabsContent>
 
           {/* ── Settings ── */}
