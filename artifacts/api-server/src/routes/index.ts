@@ -9,6 +9,7 @@ import referralsRouter from "./referrals.js";
 import activityRouter from "./activity.js";
 import pay0Router from "./pay0.js";
 import settingsRouter from "./settings.js";
+import giftCodesRouter from "./giftcodes.js";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(referralsRouter);
 router.use(activityRouter);
 router.use(pay0Router);
 router.use(settingsRouter);
+router.use(giftCodesRouter);
 
 export default router;

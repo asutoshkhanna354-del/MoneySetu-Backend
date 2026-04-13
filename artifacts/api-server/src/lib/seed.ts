@@ -112,6 +112,31 @@ export async function runMigrations() {
       )
     `);
 
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS gift_codes (
+        id           SERIAL PRIMARY KEY,
+        code         TEXT NOT NULL UNIQUE,
+        amount       NUMERIC(15,2) NOT NULL,
+        is_active    BOOLEAN NOT NULL DEFAULT true,
+        max_uses     INTEGER NOT NULL DEFAULT 100,
+        uses         INTEGER NOT NULL DEFAULT 0,
+        requires_plan BOOLEAN NOT NULL DEFAULT true,
+        expires_at   TIMESTAMPTZ,
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS gift_code_redemptions (
+        id          SERIAL PRIMARY KEY,
+        code_id     INTEGER NOT NULL REFERENCES gift_codes(id),
+        user_id     INTEGER NOT NULL REFERENCES users(id),
+        amount      NUMERIC(15,2) NOT NULL,
+        redeemed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(code_id, user_id)
+      )
+    `);
+
     logger.info("Migration OK: all tables ensured");
   } catch (err) {
     logger.error({ err }, "Migration warning (non-fatal)");

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { transactionsTable, usersTable } from "@workspace/db/schema";
-import { eq, desc, and, ne, gte, notInArray } from "drizzle-orm";
+import { eq, desc, and, notInArray } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
@@ -13,37 +13,12 @@ router.post("/withdraw", requireAuth, async (req, res) => {
     const userId = req.user!.userId;
 
     const withdrawAmt = parseFloat(amount);
-    if (!amount || isNaN(withdrawAmt) || withdrawAmt < 10) {
-      res.status(400).json({ error: "Minimum withdrawal is ₹10" });
+    if (!amount || isNaN(withdrawAmt) || withdrawAmt < 250) {
+      res.status(400).json({ error: "Minimum withdrawal is ₹250" });
       return;
     }
     if (withdrawAmt > 10000) {
       res.status(400).json({ error: "Maximum withdrawal is ₹10,000 per request" });
-      return;
-    }
-
-    // 10-day cooldown check — find last non-rejected withdrawal
-    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-    const [recentWithdrawal] = await db
-      .select()
-      .from(transactionsTable)
-      .where(and(
-        eq(transactionsTable.userId, userId),
-        eq(transactionsTable.type, "withdrawal"),
-        ne(transactionsTable.status, "rejected"),
-        gte(transactionsTable.createdAt, tenDaysAgo),
-      ))
-      .orderBy(desc(transactionsTable.createdAt))
-      .limit(1);
-
-    if (recentWithdrawal) {
-      const nextEligible = new Date(recentWithdrawal.createdAt.getTime() + 10 * 24 * 60 * 60 * 1000);
-      const daysLeft = Math.ceil((nextEligible.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-      res.status(400).json({
-        error: `You can only withdraw once every 10 days. Next withdrawal available in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
-        nextEligibleDate: nextEligible.toISOString(),
-        daysLeft,
-      });
       return;
     }
 

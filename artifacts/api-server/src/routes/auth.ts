@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, transactionsTable } from "@workspace/db/schema";
 import { eq, or } from "drizzle-orm";
 import { generateToken, requireAuth } from "../middlewares/auth.js";
 import { nanoid } from "../lib/nanoid.js";
@@ -183,12 +183,24 @@ router.post("/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const myReferralCode = nanoid(8).toUpperCase();
 
+    const SIGNUP_BONUS = 5;
     const [user] = await db.insert(usersTable).values({
       name, phone, email: lowerEmail, passwordHash,
       referralCode: myReferralCode,
       referredBy: referralCode || null,
       isAdmin: false,
+      balance: SIGNUP_BONUS.toString(),
+      totalEarnings: SIGNUP_BONUS.toString(),
     }).returning();
+
+    // Record the signup bonus as a transaction
+    await db.insert(transactionsTable).values({
+      userId: user.id,
+      type: "bonus",
+      amount: SIGNUP_BONUS.toString(),
+      status: "approved",
+      notes: "Sign-up welcome bonus",
+    }).catch(() => {});
 
     const token = generateToken({ userId: user.id, isAdmin: user.isAdmin });
     res.status(201).json({

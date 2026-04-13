@@ -2,7 +2,7 @@ import { db } from "@workspace/db";
 import { usersTable, referralCommissionsTable } from "@workspace/db/schema";
 import { eq, sql } from "drizzle-orm";
 
-const REFERRAL_RATES = [0.05, 0.03, 0.01]; // L1=5%, L2=3%, L3=1%
+const REFERRAL_RATES = [0.10, 0.05, 0.01]; // L1=10%, L2=5%, L3=1%
 
 export async function applyReferralCommissions(depositUserId: number, depositAmount: number) {
   try {
