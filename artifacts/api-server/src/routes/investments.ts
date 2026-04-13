@@ -231,6 +231,79 @@ router.post("/investments/:id/partial-withdraw", requireAuth, async (req, res) =
   }
 });
 
+// POST /api/investments/withdraw-earnings — withdraw from totalEarned across all active plans
+router.post("/investments/withdraw-earnings", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { amount, accountNo, ifsc, phone, accountName } = req.body;
+
+    const withdrawAmt = parseFloat(amount);
+    if (!amount || isNaN(withdrawAmt) || withdrawAmt < 250) {
+      res.status(400).json({ error: "Minimum earnings withdrawal is ₹250" });
+      return;
+    }
+
+    // Get all active investments
+    const activeInvs = await db
+      .select({ investment: userInvestmentsTable, plan: investmentPlansTable })
+      .from(userInvestmentsTable)
+      .leftJoin(investmentPlansTable, eq(userInvestmentsTable.planId, investmentPlansTable.id))
+      .where(and(eq(userInvestmentsTable.userId, userId), eq(userInvestmentsTable.status, "active")));
+
+    const totalEarned = activeInvs.reduce((sum, r) => sum + parseFloat(r.investment.totalEarned || "0"), 0);
+
+    if (totalEarned < 250) {
+      res.status(400).json({ error: "Insufficient earnings. You need at least ₹250 in earnings to withdraw." });
+      return;
+    }
+    if (withdrawAmt > totalEarned) {
+      res.status(400).json({ error: `Cannot withdraw more than your total earnings of ₹${totalEarned.toFixed(2)}` });
+      return;
+    }
+
+    // Deduct withdrawAmt from totalEarned proportionally across all plans
+    let remaining = withdrawAmt;
+    for (const r of activeInvs) {
+      if (remaining <= 0) break;
+      const invEarned = parseFloat(r.investment.totalEarned || "0");
+      if (invEarned <= 0) continue;
+      const deduct = Math.min(remaining, invEarned);
+      const newEarned = (invEarned - deduct).toFixed(8);
+      await db.update(userInvestmentsTable)
+        .set({ totalEarned: newEarned })
+        .where(eq(userInvestmentsTable.id, r.investment.id));
+      remaining -= deduct;
+    }
+
+    // Create pending withdrawal transaction
+    const paymentDetails = [
+      accountNo && `Acc: ${accountNo}`,
+      ifsc && `IFSC: ${ifsc}`,
+      phone && `Phone: ${phone}`,
+      accountName && `Name: ${accountName}`,
+    ].filter(Boolean).join(" | ");
+
+    await db.insert(transactionsTable).values({
+      userId,
+      type: "withdrawal",
+      amount: withdrawAmt.toString(),
+      status: "pending",
+      paymentMethod: "BANK",
+      notes: `Earnings withdrawal | ${paymentDetails || "No bank details"}`,
+    });
+
+    res.json({
+      success: true,
+      withdrawn: withdrawAmt,
+      remainingEarnings: totalEarned - withdrawAmt,
+      message: `₹${withdrawAmt.toFixed(2)} earnings withdrawal submitted. Processed within 24h.`,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Withdraw earnings error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/investments/:id/redeem — redeem a matured FD-style investment
 router.post("/investments/:id/redeem", requireAuth, async (req, res) => {
   try {
