@@ -6,7 +6,7 @@ import { PlatformInfoModal } from "@/components/PlatformInfoModal";
 import {
   Loader2, ShieldCheck, Home, Zap, Users, ArrowRightLeft, User,
   LogOut, PlusCircle, Sun, Moon, Wallet, ArrowUpRight, Bell,
-  Settings, Search, ChevronDown, LayoutGrid,
+  Settings, Search, ChevronDown, LayoutGrid, LifeBuoy,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { clsx } from "clsx";
@@ -41,6 +41,7 @@ const NAV_GROUPS = [
     label: "MORE",
     items: [
       { path: "/transactions",  label: "Transaction History", icon: ArrowRightLeft },
+      { path: "/support",       label: "Support Center",      icon: LifeBuoy },
       { path: "/profile",       label: "Profile",             icon: User },
     ],
   },

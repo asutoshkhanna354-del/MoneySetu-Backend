@@ -18,6 +18,7 @@ import AdminPanel from "./pages/admin/index";
 import ReferralPage from "./pages/referral";
 import Withdraw from "./pages/withdraw";
 import EarnWithdraw from "./pages/earn-withdraw";
+import Support from "./pages/support";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/referral"><ProtectedRoute component={ReferralPage} /></Route>
       <Route path="/withdraw"><ProtectedRoute component={Withdraw} /></Route>
       <Route path="/earn-withdraw"><ProtectedRoute component={EarnWithdraw} /></Route>
+      <Route path="/support"><ProtectedRoute component={Support} /></Route>
       <Route path="/admin"><ProtectedRoute component={AdminPanel} /></Route>
 
       <Route component={NotFound} />

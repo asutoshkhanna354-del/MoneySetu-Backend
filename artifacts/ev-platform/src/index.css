@@ -144,19 +144,24 @@ html.light body {
   background-color: var(--theme-bg);
   color: var(--theme-t1);
 }
-html.light .text-white   { color: var(--theme-t1) !important; }
-html.light .text-white\/40 { color: var(--theme-t3) !important; }
-html.light .text-white\/35 { color: var(--theme-t3) !important; }
-html.light .text-white\/30 { color: var(--theme-t4) !important; }
 html.light .oled-card {
   background: var(--theme-card) !important;
   border-color: var(--theme-border) !important;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.08) !important;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08) !important;
 }
 html.light .shimmer {
   background: linear-gradient(90deg, #e8edf4 25%, #f3f6fb 37%, #e8edf4 63%);
 }
 html.light ::-webkit-scrollbar-track { background: #F8FAFC; }
+
+/* Light mode: fix text-white on light-bg cards — use style={{color:"white"}} on gradient/dark cards */
+html.light .text-white   { color: var(--theme-t1) !important; }
+html.light .text-white\/80 { color: var(--theme-t2) !important; }
+html.light .text-white\/60 { color: var(--theme-t3) !important; }
+html.light .text-white\/50 { color: var(--theme-t3) !important; }
+html.light .text-white\/40 { color: var(--theme-t4) !important; }
+html.light .text-white\/35 { color: var(--theme-t4) !important; }
+html.light .text-white\/30 { color: var(--theme-t4) !important; }
 
 /* ─── GLOBAL BASE ─────────────────────────────── */
 @layer base {

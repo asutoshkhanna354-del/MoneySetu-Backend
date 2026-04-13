@@ -66,22 +66,32 @@ export default function Invest() {
     <AppLayout>
       <div className="space-y-5 pb-6">
 
-        {/* Moving gradient page header */}
-        <div className="relative rounded-3xl overflow-hidden p-6" style={{
-          background: isDark ? DARK_HERO : LIGHT_HERO,
-          backgroundSize: "300% 300%",
-          animation: "gradRotate 6s ease infinite",
-          border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)",
-        }}>
-          <div className="absolute inset-0 aurora-blob" style={{ background: "radial-gradient(circle, rgba(109,40,217,0.3) 0%, transparent 70%)", width: "100%", height: "100%", filter: "blur(30px)", borderRadius: 0, animation: "aurora1 8s ease-in-out infinite" }} />
+        {/* Secure. Simple. Smart. banner — matches screenshot */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", damping: 22, stiffness: 300 }}
+          className="relative rounded-2xl overflow-hidden p-5 flex items-center justify-between"
+          style={{ background: "linear-gradient(135deg,#1e3a8a,#3730a3,#4F35C2)", boxShadow: "0 8px 32px rgba(67,97,238,0.35)" }}
+        >
+          <div className="absolute -left-8 -top-8 w-32 h-32 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)", filter: "blur(24px)" }} />
           <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-xs font-bold text-purple-300 uppercase tracking-widest">Investment Plans</span>
-            </div>
-            <h1 className="text-2xl font-black text-white">Grow Your Wealth</h1>
-            <p className="text-white/40 text-sm mt-1">Daily returns, credited automatically every day</p>
+            <h1 className="text-xl font-black leading-tight mb-0.5" style={{ color: "white" }}>
+              Secure. Simple. Smart.
+            </h1>
+            <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+              Choose from trusted investment plans
+            </p>
           </div>
+          <div className="relative z-10 text-4xl select-none flex-shrink-0 ml-4">💰</div>
+        </motion.div>
+
+        {/* Popular Plans label */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t4)" }}>Popular Plans</p>
+          <Link href="/transactions">
+            <span className="text-xs font-semibold" style={{ color: "#6C4CF1" }}>View All</span>
+          </Link>
         </div>
 
         {isLoading ? (
