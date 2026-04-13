@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetTransactions } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { ArrowDownRight, ArrowUpRight, TrendingUp, Zap, Clock, Search, MessageSquare, Trash2, AlertTriangle } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ function parseNotes(raw: string) {
 }
 
 export default function Transactions() {
+  const { isDark } = useTheme();
   const { data: transactions, isLoading } = useGetTransactions();
   const [filter, setFilter] = useState("all");
   const [showConfirm, setShowConfirm] = useState(false);
@@ -79,7 +81,7 @@ export default function Transactions() {
         <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={() => !clearing && setShowConfirm(false)}>
           <div className="w-full max-w-md rounded-t-3xl p-6 space-y-4"
-            style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)" }}
+            style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -88,7 +90,7 @@ export default function Transactions() {
               </div>
               <div>
                 <p className="text-base font-black text-white">Clear History?</p>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <p className="text-xs" style={{ color: "var(--theme-t3)" }}>
                   Completed & rejected transactions will be deleted
                 </p>
               </div>
@@ -101,7 +103,7 @@ export default function Transactions() {
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)} disabled={clearing}
                 className="flex-1 py-3.5 rounded-2xl text-sm font-bold transition-all"
-                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                style={{ background: "var(--theme-card2)", color: "var(--theme-t2)", border: "1px solid var(--theme-border)" }}>
                 Cancel
               </button>
               <button onClick={handleClear} disabled={clearing}
@@ -122,10 +124,10 @@ export default function Transactions() {
 
         {/* Header */}
         <div className="relative rounded-3xl overflow-hidden p-6" style={{
-          background: "linear-gradient(135deg, #0d0033, #000000, #12003a)",
+          background: isDark ? "linear-gradient(135deg, #0d0033, #000000, #12003a)" : "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)",
           backgroundSize: "300% 300%",
           animation: "gradRotate 8s ease infinite",
-          border: "1px solid rgba(139,92,246,0.15)",
+          border: isDark ? "1px solid rgba(139,92,246,0.15)" : "1px solid rgba(109,40,217,0.18)",
         }}>
           <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 20% 50%, rgba(109,40,217,0.2) 0%, transparent 60%)", pointerEvents: "none" }} />
           <div className="relative z-10">
@@ -145,12 +147,12 @@ export default function Transactions() {
             </div>
             <div className="flex gap-5 mt-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>Total Deposited</p>
+                <p className="text-[11px] font-semibold uppercase" style={{ color: "var(--theme-t3)" }}>Total Deposited</p>
                 <p className="text-xl font-black text-blue-400">₹{depositTotal.toLocaleString("en-IN")}</p>
               </div>
-              <div style={{ width: "1px", background: "rgba(255,255,255,0.08)" }} />
+              <div style={{ width: "1px", background: "var(--theme-card3)" }} />
               <div>
-                <p className="text-[11px] font-semibold uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>Total Withdrawn</p>
+                <p className="text-[11px] font-semibold uppercase" style={{ color: "var(--theme-t3)" }}>Total Withdrawn</p>
                 <p className="text-xl font-black text-orange-400">₹{withdrawTotal.toLocaleString("en-IN")}</p>
               </div>
             </div>
@@ -169,9 +171,9 @@ export default function Transactions() {
                 color: "white",
                 boxShadow: "0 0 16px rgba(139,92,246,0.4)",
               } : {
-                background: "rgba(255,255,255,0.05)",
-                color: "rgba(255,255,255,0.4)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "var(--theme-card2)",
+                color: "var(--theme-t3)",
+                border: "1px solid var(--theme-border)",
               }}
             >
               {tab.label}
@@ -185,9 +187,9 @@ export default function Transactions() {
             {[1,2,3,4,5].map(i => <div key={i} className="h-24 rounded-2xl shimmer" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 rounded-3xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
-            <Search className="w-10 h-10 mx-auto mb-3" style={{ color: "rgba(255,255,255,0.15)" }} />
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No transactions found</p>
+          <div className="text-center py-16 rounded-3xl" style={{ background: "var(--theme-card)", border: "1px dashed var(--theme-border)" }}>
+            <Search className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--theme-t5)" }} />
+            <p className="text-sm" style={{ color: "var(--theme-t3)" }}>No transactions found</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -206,7 +208,7 @@ export default function Transactions() {
                   key={tx.id}
                   className="rounded-2xl p-4 space-y-3"
                   style={{
-                    background: "rgba(255,255,255,0.025)",
+                    background: "var(--theme-card)",
                     border: adminMsg
                       ? `1px solid ${isApproved ? "rgba(74,222,128,0.15)" : "rgba(239,68,68,0.15)"}`
                       : isProcessing
@@ -239,7 +241,7 @@ export default function Transactions() {
                             {isProcessing ? "Processing…" : isCancelled ? "Cancelled" : tx.status}
                           </span>
                           {(tx as any).paymentMethod && (
-                            <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.25)" }}>
+                            <span className="text-[10px] font-semibold" style={{ color: "var(--theme-t4)" }}>
                               via {(tx as any).paymentMethod}
                             </span>
                           )}
@@ -250,15 +252,15 @@ export default function Transactions() {
                       <p className="font-black text-lg" style={{ color: isCredit ? "#4ade80" : cfg.color }}>
                         {isCredit ? "+" : "-"}₹{parseFloat(tx.amount?.toString()).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </p>
-                      <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>#{tx.id.toString().padStart(6, "0")}</p>
+                      <p className="text-[10px]" style={{ color: "var(--theme-t4)" }}>#{tx.id.toString().padStart(6, "0")}</p>
                     </div>
                   </div>
 
                   {/* UTR / Reference note */}
                   {ref && (
-                    <div className="px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                      <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>Reference / UTR</p>
-                      <p className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.5)" }}>{ref}</p>
+                    <div className="px-3 py-2 rounded-xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+                      <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: "var(--theme-t4)" }}>Reference / UTR</p>
+                      <p className="text-xs font-mono" style={{ color: "var(--theme-t2)" }}>{ref}</p>
                     </div>
                   )}
 
@@ -288,7 +290,7 @@ export default function Transactions() {
                   )}
 
                   {/* Timestamp */}
-                  <div className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.18)" }}>
+                  <div className="flex items-center gap-1" style={{ color: "var(--theme-t4)" }}>
                     <Clock className="w-3 h-3" />
                     <span className="text-[10px]">{format(new Date(tx.createdAt), "MMM d, yyyy · h:mm a")}</span>
                   </div>

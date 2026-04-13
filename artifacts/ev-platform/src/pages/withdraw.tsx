@@ -11,6 +11,7 @@ import {
   Banknote, X,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const PLAN_COLORS: Record<string, { glow: string; badge: string; border: string; bg: string; text: string }> = {
   silver:   { glow: "rgba(148,163,184,0.3)", badge: "rgba(148,163,184,0.15)", border: "rgba(148,163,184,0.25)", bg: "rgba(148,163,184,0.06)", text: "#94a3b8" },
@@ -32,16 +33,16 @@ function ProgressBar({ startDate, endDate }: { startDate: string; endDate: strin
   const elapsed = Date.now() - new Date(startDate).getTime();
   const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
   return (
-    <div className="w-full rounded-full overflow-hidden" style={{ height: "4px", background: "rgba(255,255,255,0.07)" }}>
+    <div className="w-full rounded-full overflow-hidden" style={{ height: "4px", background: "var(--theme-card2)" }}>
       <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #6d28d9, #a855f7)" }} />
     </div>
   );
 }
 
 const inputStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  color: "white",
+  background: "var(--theme-card2)",
+  border: "1px solid var(--theme-border)",
+  color: "var(--theme-t1)",
   borderRadius: "10px",
   padding: "10px 14px",
   width: "100%",
@@ -120,7 +121,7 @@ function PartialWithdrawForm({
       <div className="rounded-xl p-4 text-center" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
         <CalendarClock className="w-5 h-5 text-red-400 mx-auto mb-2" />
         <p className="text-sm font-bold text-red-400">Withdrawal Cooldown Active</p>
-        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-xs mt-1" style={{ color: "var(--theme-t3)" }}>
           Next withdrawal available in <strong className="text-white">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</strong>
         </p>
       </div>
@@ -132,7 +133,7 @@ function PartialWithdrawForm({
       <div className="rounded-xl p-4 text-center" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.12)" }}>
         <TrendingUp className="w-5 h-5 mx-auto mb-2" style={{ color: "#4ade80" }} />
         <p className="text-sm font-bold" style={{ color: "#4ade80" }}>No Earnings to Withdraw Yet</p>
-        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-xs mt-1" style={{ color: "var(--theme-t3)" }}>
           Daily earnings are credited every 24h. Come back tomorrow to withdraw.
         </p>
       </div>
@@ -143,7 +144,7 @@ function PartialWithdrawForm({
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Amount */}
       <div>
-        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t3)" }}>
           Withdraw from Earnings (₹250 – ₹{maxAmt.toLocaleString("en-IN")} earned)
         </label>
         <div className="relative">
@@ -176,30 +177,30 @@ function PartialWithdrawForm({
 
       {/* Bank Account Details */}
       <div className="space-y-2.5">
-        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
           Bank Account Details
         </p>
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>Account Number <span style={{ color: "#f87171" }}>*</span></label>
+          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t4)" }}>Account Number <span style={{ color: "#f87171" }}>*</span></label>
           <input type="text" value={accountNo} onChange={e => setAccountNo(e.target.value)} placeholder="e.g. 1234567890123456" style={inputStyle} />
         </div>
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>IFSC Code <span style={{ color: "#f87171" }}>*</span></label>
+          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t4)" }}>IFSC Code <span style={{ color: "#f87171" }}>*</span></label>
           <input type="text" value={ifsc} onChange={e => setIfsc(e.target.value.toUpperCase())} placeholder="e.g. SBIN0001234" style={inputStyle} />
         </div>
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>Phone Number <span style={{ color: "#f87171" }}>*</span></label>
+          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t4)" }}>Phone Number <span style={{ color: "#f87171" }}>*</span></label>
           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="10-digit mobile number" style={inputStyle} />
         </div>
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>Name on Account <span style={{ color: "#f87171" }}>*</span></label>
+          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t4)" }}>Name on Account <span style={{ color: "#f87171" }}>*</span></label>
           <input type="text" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="As printed on passbook" style={inputStyle} />
         </div>
       </div>
 
       {/* Info */}
       <div className="rounded-lg p-3" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.12)" }}>
-        <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-[10px] leading-relaxed" style={{ color: "var(--theme-t3)" }}>
           • Only earned returns can be partially withdrawn (principal stays locked)<br />
           • Amount transferred to your bank within 24h<br />
           • Your plan continues earning after withdrawal<br />
@@ -284,7 +285,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
           </button>
         )}
         {open && (
-          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--theme-card2)" }}>
             <X className="w-4 h-4 text-white/50" />
           </button>
         )}
@@ -293,8 +294,8 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
       {/* Not enough earnings */}
       {!open && totalEarned < 250 && (
         <div className="px-5 pb-4">
-          <div className="rounded-xl p-3 text-center" style={{ background: "rgba(0,0,0,0.3)" }}>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <div className="rounded-xl p-3 text-center" style={{ background: "var(--theme-panel)" }}>
+            <p className="text-xs" style={{ color: "var(--theme-t3)" }}>
               {totalEarned === 0
                 ? "Earnings will appear here after your first interest credit (24h)."
                 : `₹${(250 - totalEarned).toFixed(2)} more needed to reach ₹250 minimum.`}
@@ -319,7 +320,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
                     <CheckCircle2 className="w-7 h-7 text-emerald-400" />
                   </div>
                   <p className="font-black text-white">Withdrawal Submitted!</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>₹{withdrawAmt.toFixed(2)} request sent. You'll receive payment within 24h.</p>
+                  <p className="text-xs" style={{ color: "var(--theme-t3)" }}>₹{withdrawAmt.toFixed(2)} request sent. You'll receive payment within 24h.</p>
                   <button onClick={() => { setOpen(false); setSuccess(false); }}
                     className="px-6 py-2.5 rounded-xl font-bold text-sm text-white"
                     style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
@@ -330,7 +331,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Amount */}
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: "var(--theme-t3)" }}>
                       Amount (₹250 – ₹{Math.floor(totalEarned).toLocaleString("en-IN")})
                     </label>
                     <div className="relative">
@@ -339,7 +340,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
                         type="number" value={amount} onChange={e => setAmount(e.target.value)}
                         placeholder="0" min={250} max={totalEarned}
                         className="w-full h-12 rounded-xl pl-8 pr-4 font-black text-lg text-white outline-none"
-                        style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${isBelowMin || isAboveMax ? "rgba(239,68,68,0.4)" : "rgba(74,222,128,0.2)"}` }}
+                        style={{ background: "var(--theme-card2)", border: `1px solid ${isBelowMin || isAboveMax ? "rgba(239,68,68,0.4)" : "rgba(74,222,128,0.2)"}` }}
                       />
                     </div>
                     {/* Quick amounts */}
@@ -365,7 +366,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
 
                   {/* Bank Details */}
                   <div className="space-y-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Bank Details</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>Bank Details</p>
                     {[
                       { label: "Account Number", value: accountNo, set: setAccountNo, placeholder: "e.g. 1234567890123456", type: "text" },
                       { label: "IFSC Code", value: ifsc, set: (v: string) => setIfsc(v.toUpperCase()), placeholder: "e.g. SBIN0001234", type: "text" },
@@ -373,17 +374,17 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
                       { label: "Name on Account", value: accountName, set: setAccountName, placeholder: "As printed on passbook", type: "text" },
                     ].map(f => (
                       <div key={f.label}>
-                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>{f.label} <span style={{ color: "#f87171" }}>*</span></label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1" style={{ color: "var(--theme-t4)" }}>{f.label} <span style={{ color: "#f87171" }}>*</span></label>
                         <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
                           className="w-full h-10 rounded-xl px-3 text-sm text-white outline-none"
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
+                          style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-border)" }} />
                       </div>
                     ))}
                   </div>
 
                   {/* Info note */}
                   <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.1)" }}>
-                    <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    <p className="text-[10px] leading-relaxed" style={{ color: "var(--theme-t3)" }}>
                       • Only your daily earned returns are withdrawn — your principal stays fully invested<br />
                       • Bank transfer processed within 24 hours of approval<br />
                       • Your plans continue earning after this withdrawal
@@ -406,6 +407,7 @@ function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number
 }
 
 export default function Withdraw() {
+  const { isDark } = useTheme();
   const { data: investments, isLoading } = useGetUserInvestments();
   const { data: balanceData } = useGetBalance();
   const { data: txData } = useGetTransactions();
@@ -460,10 +462,10 @@ export default function Withdraw() {
 
         {/* Header */}
         <div className="relative rounded-3xl overflow-hidden p-6" style={{
-          background: "linear-gradient(135deg, #0a0a1a, #000000, #0a0a1a)",
+          background: isDark ? "linear-gradient(135deg, #0a0a1a, #000000, #0a0a1a)" : "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)",
           backgroundSize: "300% 300%",
           animation: "gradRotate 7s ease infinite",
-          border: "1px solid rgba(139,92,246,0.2)",
+          border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)",
         }}>
           <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 70% 50%, rgba(139,92,246,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
           <div className="relative z-10 flex items-center justify-between">
@@ -477,7 +479,7 @@ export default function Withdraw() {
               </div>
             </div>
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>Wallet</p>
+              <p className="text-xs font-semibold" style={{ color: "var(--theme-t3)" }}>Wallet</p>
               <p className="text-xl font-black text-white">₹{(balanceData?.balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
@@ -490,12 +492,12 @@ export default function Withdraw() {
               <div className="rounded-2xl p-4" style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.15)" }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(74,222,128,0.6)" }}>Total Earned</p>
                 <p className="text-xl font-black" style={{ color: "#4ade80" }}>₹{totalEarnedFromActive.toFixed(2)}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>from active plans</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--theme-t4)" }}>from active plans</p>
               </div>
               <div className="rounded-2xl p-4" style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(139,92,246,0.7)" }}>Total Earnings</p>
                 <p className="text-xl font-black text-purple-400">₹{(balanceData?.totalEarnings || 0).toFixed(2)}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>all-time</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--theme-t4)" }}>all-time</p>
               </div>
             </div>
 
@@ -512,7 +514,7 @@ export default function Withdraw() {
           <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(139,92,246,0.04)", border: "1px dashed rgba(139,92,246,0.2)" }}>
             <Wallet className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(139,92,246,0.3)" }} />
             <p className="font-bold text-white mb-2">No Active Investments</p>
-            <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.35)" }}>Invest in a plan first to start earning daily returns.</p>
+            <p className="text-sm mb-5" style={{ color: "var(--theme-t3)" }}>Invest in a plan first to start earning daily returns.</p>
             <a href="/invest" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white"
               style={{ background: "linear-gradient(135deg, #6d28d9, #a855f7)", boxShadow: "0 0 20px rgba(139,92,246,0.3)" }}>
               Browse Plans →
@@ -523,7 +525,7 @@ export default function Withdraw() {
         {/* Active plans */}
         {active.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Active Plans ({active.length})</p>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t4)" }}>Active Plans ({active.length})</p>
             {active.map((inv, i) => {
               const c = getPlanColor(inv.planName);
               const matured = new Date() >= new Date(inv.endDate);
@@ -560,23 +562,23 @@ export default function Withdraw() {
 
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                        <p className="text-[10px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>Invested</p>
+                      <div className="rounded-xl p-3" style={{ background: "var(--theme-panel)" }}>
+                        <p className="text-[10px] font-bold uppercase" style={{ color: "var(--theme-t3)" }}>Invested</p>
                         <p className="font-black text-base text-white">₹{inv.amount.toLocaleString("en-IN")}</p>
                       </div>
-                      <div className="rounded-xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                        <p className="text-[10px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>Earned</p>
+                      <div className="rounded-xl p-3" style={{ background: "var(--theme-panel)" }}>
+                        <p className="text-[10px] font-bold uppercase" style={{ color: "var(--theme-t3)" }}>Earned</p>
                         <p className="font-black text-base" style={{ color: "#4ade80" }}>₹{inv.totalEarned.toFixed(2)}</p>
                       </div>
-                      <div className="rounded-xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                        <p className="text-[10px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>On Redeem</p>
+                      <div className="rounded-xl p-3" style={{ background: "var(--theme-panel)" }}>
+                        <p className="text-[10px] font-bold uppercase" style={{ color: "var(--theme-t3)" }}>On Redeem</p>
                         <p className="font-black text-base" style={{ color: c.text }}>₹{totalReturn.toFixed(2)}</p>
                       </div>
                     </div>
 
                     {/* Progress */}
                     <div>
-                      <div className="flex justify-between text-[10px] font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      <div className="flex justify-between text-[10px] font-semibold mb-1.5" style={{ color: "var(--theme-t3)" }}>
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{format(new Date(inv.startDate), "dd MMM")}</span>
                         <span className="flex items-center gap-1">{format(new Date(inv.endDate), "dd MMM yyyy")}<Calendar className="w-3 h-3" /></span>
                       </div>
@@ -595,7 +597,7 @@ export default function Withdraw() {
                     ) : (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          <div className="flex items-center gap-2 text-sm" style={{ color: "var(--theme-t3)" }}>
                             <Lock className="w-4 h-4" />
                             <span>Matures in <strong className="text-white">{daysLeft}d {hoursLeft}h</strong></span>
                           </div>
@@ -621,7 +623,7 @@ export default function Withdraw() {
                               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                               className="overflow-hidden"
                             >
-                              <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(249,115,22,0.12)" }}>
+                              <div className="rounded-xl p-4 space-y-3" style={{ background: "var(--theme-panel)", border: "1px solid rgba(249,115,22,0.12)" }}>
                                 <p className="text-xs font-black" style={{ color: "#fb923c" }}>Partial Withdrawal Request</p>
                                 <PartialWithdrawForm
                                   inv={inv}
@@ -645,19 +647,19 @@ export default function Withdraw() {
         {/* Completed */}
         {completed.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>Redeemed ({completed.length})</p>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t4)" }}>Redeemed ({completed.length})</p>
             {completed.slice(0, 5).map(inv => {
               const c = getPlanColor(inv.planName);
               return (
                 <div key={inv.id} className="rounded-2xl p-4 flex items-center justify-between opacity-45"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm" style={{ background: c.badge, color: c.text }}>
                       {inv.planName[0]}
                     </div>
                     <div>
                       <p className="font-bold text-sm text-white">{inv.planName}</p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Redeemed · ₹{inv.amount.toLocaleString("en-IN")} invested</p>
+                      <p className="text-xs" style={{ color: "var(--theme-t3)" }}>Redeemed · ₹{inv.amount.toLocaleString("en-IN")} invested</p>
                     </div>
                   </div>
                   <span className="text-xs font-black" style={{ color: "#4ade80" }}>+₹{inv.totalEarned.toFixed(2)}</span>

@@ -6,12 +6,14 @@ import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Clock, User
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 
 export default function Dashboard() {
+  const { isDark } = useTheme();
   const { data: balanceData, isLoading: balanceLoading } = useGetBalance();
   const { data: txData } = useGetTransactions();
   const { data: investments } = useGetUserInvestments();
@@ -141,14 +143,14 @@ export default function Dashboard() {
             <Link key={a.href} href={a.href}>
               <div
                 className="p-4 flex flex-col items-center justify-center space-y-2 cursor-pointer transition-all hover:-translate-y-1 rounded-2xl"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
               >
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: a.bg, boxShadow: `0 0 16px ${a.bg}` }}>
                   <a.icon className="w-6 h-6" style={{ color: a.iconColor }} />
                 </div>
-                <span className="font-bold text-xs text-center" style={{ color: "rgba(255,255,255,0.6)" }}>{a.label}</span>
+                <span className="font-bold text-xs text-center" style={{ color: "var(--theme-t2)" }}>{a.label}</span>
               </div>
             </Link>
           ))}
@@ -156,14 +158,14 @@ export default function Dashboard() {
           <div
             onClick={() => { setGiftOpen(true); setGiftSuccess(null); setGiftCode(""); }}
             className="p-4 flex flex-col items-center justify-center space-y-2 cursor-pointer transition-all hover:-translate-y-1 rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
             onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
           >
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(234,179,8,0.12)", boxShadow: "0 0 16px rgba(234,179,8,0.12)" }}>
               <Gift className="w-6 h-6" style={{ color: "#eab308" }} />
             </div>
-            <span className="font-bold text-xs text-center" style={{ color: "rgba(255,255,255,0.6)" }}>Gift Code</span>
+            <span className="font-bold text-xs text-center" style={{ color: "var(--theme-t2)" }}>Gift Code</span>
           </div>
         </div>
 
@@ -180,7 +182,7 @@ export default function Dashboard() {
                 initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                 onClick={e => e.stopPropagation()}
                 className="w-full max-w-[320px] rounded-3xl overflow-hidden"
-                style={{ background: "linear-gradient(160deg,#0e0e20,#150e2c)", border: "1px solid rgba(234,179,8,0.25)", boxShadow: "0 0 40px rgba(234,179,8,0.15)" }}
+                style={{ background: isDark ? "linear-gradient(160deg,#0e0e20,#150e2c)" : "linear-gradient(160deg,#fffbeb,#fef9c3)", border: "1px solid rgba(234,179,8,0.35)", boxShadow: "0 0 40px rgba(234,179,8,0.15)" }}
               >
                 <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg,#ca8a04,#eab308,#ca8a04)" }} />
                 <div className="p-5">
@@ -194,7 +196,7 @@ export default function Dashboard() {
                         <p className="text-[10px]" style={{ color: "rgba(234,179,8,0.6)" }}>Daily codes: ₹7 to ₹200</p>
                       </div>
                     </div>
-                    <button onClick={() => setGiftOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <button onClick={() => setGiftOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "var(--theme-card2)" }}>
                       <X className="w-3.5 h-3.5 text-white/50" />
                     </button>
                   </div>
@@ -205,7 +207,7 @@ export default function Dashboard() {
                         <CheckCircle className="w-8 h-8 text-emerald-400" />
                       </div>
                       <p className="font-black text-white text-lg">₹{giftSuccess.amount} Credited!</p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>The amount has been added to your wallet.</p>
+                      <p className="text-xs" style={{ color: "var(--theme-t3)" }}>The amount has been added to your wallet.</p>
                       <button onClick={() => setGiftOpen(false)}
                         className="w-full py-2.5 rounded-xl font-bold text-sm"
                         style={{ background: "linear-gradient(135deg,#ca8a04,#eab308)", color: "white" }}>
@@ -215,18 +217,18 @@ export default function Dashboard() {
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>Enter Code</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t3)" }}>Enter Code</label>
                         <input
                           value={giftCode}
                           onChange={e => setGiftCode(e.target.value.toUpperCase())}
                           onKeyDown={e => e.key === "Enter" && handleRedeemGift()}
                           placeholder="e.g. DAILY50"
                           className="w-full h-12 rounded-xl px-4 text-center text-white font-mono font-black text-base tracking-widest outline-none"
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(234,179,8,0.2)", color: "white" }}
+                          style={{ background: "var(--theme-card2)", border: "1px solid rgba(234,179,8,0.2)", color: "var(--theme-t1)" }}
                           autoFocus
                         />
                       </div>
-                      <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      <p className="text-[10px]" style={{ color: "var(--theme-t4)" }}>
                         Requires an active investment plan. Each code can only be redeemed once per user.
                       </p>
                       <button
@@ -257,7 +259,7 @@ export default function Dashboard() {
             {activeInvestments.length === 0 ? (
               <div className="p-8 text-center rounded-2xl" style={{ background: "rgba(139,92,246,0.05)", border: "1px dashed rgba(139,92,246,0.2)" }}>
                 <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: "rgba(139,92,246,0.3)" }} />
-                <p className="text-sm mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>No active investments yet</p>
+                <p className="text-sm mb-3" style={{ color: "var(--theme-t3)" }}>No active investments yet</p>
                 <Link href="/invest">
                   <span className="text-sm font-bold text-purple-400 underline">Start with Silver Plan →</span>
                 </Link>
@@ -269,14 +271,14 @@ export default function Dashboard() {
                     key={inv.id}
                     initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.08 }}
                   >
-                    <div className="p-4 rounded-2xl flex items-center justify-between" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(139,92,246,0.15)" }}>
+                    <div className="p-4 rounded-2xl flex items-center justify-between" style={{ background: "var(--theme-card)", border: "1px solid rgba(139,92,246,0.15)" }}>
                       <div className="flex items-center space-x-3">
                         <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ background: "linear-gradient(135deg, #6d28d9, #a855f7)", boxShadow: "0 0 16px rgba(139,92,246,0.3)" }}>
                           {(inv.planName || "P")[0]}
                         </div>
                         <div>
                           <p className="font-bold text-sm text-white">{inv.planName}</p>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{inv.dailyReturnPercent}% daily · {inv.durationDays} days</p>
+                          <p className="text-xs" style={{ color: "var(--theme-t3)" }}>{inv.dailyReturnPercent}% daily · {inv.durationDays} days</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -297,9 +299,9 @@ export default function Dashboard() {
               <Link href="/transactions" className="text-xs font-semibold text-primary hover:underline">View All</Link>
             </div>
 
-            <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
               {recentTxs.length === 0 ? (
-                <div className="p-8 text-center text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No transactions yet</div>
+                <div className="p-8 text-center text-sm" style={{ color: "var(--theme-t3)" }}>No transactions yet</div>
               ) : (
                 recentTxs.map((tx, i) => {
                   const isCredit = ['deposit', 'earning', 'commission'].includes(tx.type);
@@ -318,7 +320,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-semibold text-sm capitalize text-white">{tx.type}</p>
-                          <p className="text-xs flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <p className="text-xs flex items-center gap-1" style={{ color: "var(--theme-t3)" }}>
                             <Clock className="w-3 h-3" />{format(new Date(tx.createdAt), "MMM d, h:mm a")}
                           </p>
                         </div>

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Loader2, ShieldCheck, Lock, X, CheckCircle2, ChevronRight } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -189,16 +190,16 @@ function UPIAppPicker({
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end" style={{ background: "rgba(0,0,0,0.7)" }}
       onClick={onClose}>
-      <div className="rounded-t-3xl p-6 space-y-4" style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)" }}
+      <div className="rounded-t-3xl p-6 space-y-4" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <p className="text-base font-black text-white">Choose UPI App</p>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--theme-card2)" }}>
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-xs" style={{ color: "var(--theme-t3)" }}>
           Tap your app — it will open with the payment ready to confirm
         </p>
         <div className="space-y-2">
@@ -206,17 +207,17 @@ function UPIAppPicker({
             <a key={app.id}
               href={getLinkForApp(app)}
               className="flex items-center gap-4 rounded-2xl px-4 py-3.5 transition-all active:scale-[0.98]"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", textDecoration: "none" }}>
+              style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)", textDecoration: "none" }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: app.bg }}>
                 {app.logo}
               </div>
               <span className="text-white font-semibold text-sm flex-1">{app.name}</span>
-              <ChevronRight className="w-4 h-4" style={{ color: "rgba(255,255,255,0.2)" }} />
+              <ChevronRight className="w-4 h-4" style={{ color: "var(--theme-t4)" }} />
             </a>
           ))}
         </div>
-        <p className="text-[10px] text-center pb-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <p className="text-[10px] text-center pb-1" style={{ color: "var(--theme-t4)" }}>
           Or scan the QR above with any UPI app's camera
         </p>
       </div>
@@ -329,12 +330,12 @@ function PaymentQRModal({
           style={{ background: brand.headerBg, border: brand.headerBorder }}>
           {brand.logoEl}
           <div>
-            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>Payment to</p>
+            <p className="text-xs font-semibold" style={{ color: "var(--theme-t3)" }}>Payment to</p>
             <p className="text-base font-black text-white">MoneySetu</p>
             <p className="text-xs font-semibold" style={{ color: "#4ade80" }}>✓ Verified Business</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Amount</p>
+            <p className="text-xs" style={{ color: "var(--theme-t3)" }}>Amount</p>
             <p className="text-lg font-black text-white">₹{amount.toLocaleString("en-IN")}</p>
           </div>
         </div>
@@ -361,7 +362,7 @@ function PaymentQRModal({
 
         {/* Countdown */}
         {!paid && (
-          <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--theme-t2)" }}>
             Expires in{" "}
             <span style={{ color: "#f59e0b", fontWeight: 800 }}>{mm}:{ss}</span>
           </p>
@@ -430,7 +431,7 @@ function PaymentQRModal({
         )}
 
         {!paid && (
-          <button onClick={onClose} className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+          <button onClick={onClose} className="text-xs" style={{ color: "var(--theme-t4)" }}>
             Cancel payment
           </button>
         )}
@@ -444,7 +445,7 @@ function PaymentQRModal({
 const GPayButton = ({ onClick, loading, disabled }: { onClick: () => void; loading: boolean; disabled: boolean }) => (
   <button onClick={onClick} disabled={disabled}
     className="w-full flex items-center justify-center gap-2 rounded-2xl transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-    style={{ background: "#000", height: "64px", border: "1px solid rgba(255,255,255,0.1)" }}>
+    style={{ background: "#000", height: "64px", border: "1px solid var(--theme-borderhi)" }}>
     {loading ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : (
       <>
         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -517,6 +518,7 @@ const METHODS: { id: string; Button: React.FC<any> }[] = [
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Deposit() {
+  const { isDark } = useTheme();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [loadingMethod, setLoadingMethod] = useState<string | null>(null);
@@ -613,7 +615,7 @@ export default function Deposit() {
       <div className="space-y-5 pb-8 max-w-md mx-auto">
         {/* Header */}
         <div className="relative rounded-3xl overflow-hidden p-6"
-          style={{ background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", border: "1px solid rgba(139,92,246,0.2)" }}>
+          style={{ background: isDark ? "linear-gradient(135deg, #0f0c29, #302b63, #24243e)" : "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)", border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)" }}>
           <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 70% 50%, rgba(139,92,246,0.2) 0%, transparent 65%)", pointerEvents: "none" }} />
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
@@ -622,15 +624,15 @@ export default function Deposit() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-white">Add Money</h1>
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>100% secure • Instant credit</p>
+              <p className="text-sm" style={{ color: "var(--theme-t3)" }}>100% secure • Instant credit</p>
             </div>
           </div>
         </div>
 
         {/* Amount */}
         <div className="rounded-2xl p-5 space-y-4"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <label className="text-xs font-black uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+          style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+          <label className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
             Enter Amount
           </label>
           <div className="relative flex items-center">
@@ -667,7 +669,7 @@ export default function Deposit() {
 
         {/* Payment methods */}
         <div className="space-y-3">
-          <p className="text-xs font-black uppercase tracking-widest px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <p className="text-xs font-black uppercase tracking-widest px-1" style={{ color: "var(--theme-t3)" }}>
             Choose Payment Method
           </p>
           {METHODS.map(({ id, Button }) => (
@@ -682,13 +684,13 @@ export default function Deposit() {
         {/* Trust badges */}
         <div className="flex items-center justify-center gap-6 pt-2">
           <div className="flex items-center gap-1.5">
-            <Lock className="w-3 h-3" style={{ color: "rgba(255,255,255,0.2)" }} />
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>256-bit encrypted</span>
+            <Lock className="w-3 h-3" style={{ color: "var(--theme-t4)" }} />
+            <span className="text-xs" style={{ color: "var(--theme-t4)" }}>256-bit encrypted</span>
           </div>
-          <div className="w-px h-3" style={{ background: "rgba(255,255,255,0.1)" }} />
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>RBI compliant</span>
-          <div className="w-px h-3" style={{ background: "rgba(255,255,255,0.1)" }} />
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Instant credit</span>
+          <div className="w-px h-3" style={{ background: "var(--theme-card3)" }} />
+          <span className="text-xs" style={{ color: "var(--theme-t4)" }}>RBI compliant</span>
+          <div className="w-px h-3" style={{ background: "var(--theme-card3)" }} />
+          <span className="text-xs" style={{ color: "var(--theme-t4)" }}>Instant credit</span>
         </div>
       </div>
     </AppLayout>

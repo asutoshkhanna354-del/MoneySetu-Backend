@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Zap, Clock, TrendingUp, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,11 @@ const PLAN_COLORS: Record<string, { color: string; glow: string; gradient: strin
 const defaultPlan = { color: "#a855f7", glow: "rgba(168,85,247,0.4)", gradient: "linear-gradient(135deg,#7c3aed,#a855f7)" };
 function planStyle(name: string) { return PLAN_COLORS[name] || defaultPlan; }
 
+const LIGHT_HERO = "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)";
+const DARK_HERO = "linear-gradient(135deg, #1a0533, #0d0118, #160a2e)";
+
 export default function Invest() {
+  const { isDark } = useTheme();
   const { data: plans, isLoading } = useGetInvestmentPlans();
   const { data: balanceData } = useGetBalance();
   const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
@@ -63,10 +68,10 @@ export default function Invest() {
 
         {/* Moving gradient page header */}
         <div className="relative rounded-3xl overflow-hidden p-6" style={{
-          background: "linear-gradient(135deg, #1a0533, #0d0118, #160a2e)",
+          background: isDark ? DARK_HERO : LIGHT_HERO,
           backgroundSize: "300% 300%",
           animation: "gradRotate 6s ease infinite",
-          border: "1px solid rgba(139,92,246,0.2)",
+          border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)",
         }}>
           <div className="absolute inset-0 aurora-blob" style={{ background: "radial-gradient(circle, rgba(109,40,217,0.3) 0%, transparent 70%)", width: "100%", height: "100%", filter: "blur(30px)", borderRadius: 0, animation: "aurora1 8s ease-in-out infinite" }} />
           <div className="relative z-10">
@@ -96,12 +101,12 @@ export default function Invest() {
                     className="rounded-2xl p-px"
                     style={{ background: `linear-gradient(135deg, ${ps.glow.replace("0.35","0.5")}, rgba(255,255,255,0.04), ${ps.glow.replace("0.35","0.3")})` }}
                   >
-                    <div className="rounded-[14px] overflow-hidden" style={{ background: "#080808" }}>
+                    <div className="rounded-[14px] overflow-hidden" style={{ background: "var(--theme-card)" }}>
                       {/* Plan image */}
                       {(plan as any).imageUrl && (
                         <div className="relative overflow-hidden" style={{ height: "140px" }}>
                           <img src={(plan as any).imageUrl} alt={plan.name} className="w-full h-full object-cover" onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }} />
-                          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(8,8,8,0) 30%, #080808 100%)" }} />
+                          <div className="absolute inset-0" style={{ background: isDark ? "linear-gradient(to bottom, rgba(8,8,8,0) 30%, #080808 100%)" : "linear-gradient(to bottom, rgba(255,255,255,0) 30%, #ffffff 100%)" }} />
                           <div className="absolute bottom-3 left-4 flex items-center gap-2">
                             <span className="px-3 py-1 rounded-full text-xs font-black" style={{ background: ps.glow.replace("0.35","0.6"), color: ps.color, backdropFilter: "blur(8px)" }}>{plan.dailyReturnPercent}% daily</span>
                           </div>
@@ -110,7 +115,7 @@ export default function Invest() {
                       {/* Plan header */}
                       <div className="px-5 pt-5 pb-4 flex items-center justify-between" style={{
                         background: `linear-gradient(135deg, ${ps.glow.replace("0.35","0.15")}, transparent)`,
-                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        borderBottom: "1px solid var(--theme-border)",
                       }}>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: ps.glow.replace("0.35","0.2"), boxShadow: `0 0 16px ${ps.glow}` }}>
@@ -118,34 +123,34 @@ export default function Invest() {
                           </div>
                           <div>
                             <p className="font-black text-white text-lg">{plan.name}</p>
-                            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{plan.description || `Earn ${plan.dailyReturnPercent}% every day`}</p>
+                            <p className="text-xs" style={{ color: "var(--theme-t3)" }}>{plan.description || `Earn ${plan.dailyReturnPercent}% every day`}</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <span className="text-2xl font-black" style={{ color: ps.color, textShadow: `0 0 20px ${ps.glow}` }}>{plan.dailyReturnPercent}%</span>
-                          <p className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>daily</p>
+                          <p className="text-[10px] font-semibold" style={{ color: "var(--theme-t3)" }}>daily</p>
                         </div>
                       </div>
 
                       {/* Plan details */}
                       <div className="p-5 space-y-4">
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <div className="rounded-xl p-3" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1" style={{ color: "var(--theme-t3)" }}>
                               <TrendingUp className="w-3 h-3" /> Investment
                             </p>
                             <p className="font-bold text-sm text-white">₹{plan.minAmount.toLocaleString("en-IN")} – ₹{plan.maxAmount.toLocaleString("en-IN")}</p>
                           </div>
-                          <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <div className="rounded-xl p-3" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1" style={{ color: "var(--theme-t3)" }}>
                               <Clock className="w-3 h-3" /> Duration
                             </p>
                             <p className="font-bold text-sm text-white">{plan.durationDays} Days</p>
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center text-sm py-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                          <span style={{ color: "rgba(255,255,255,0.35)" }}>Total profit at max</span>
+                        <div className="flex justify-between items-center text-sm py-2" style={{ borderTop: "1px solid var(--theme-border)" }}>
+                          <span style={{ color: "var(--theme-t3)" }}>Total profit at max</span>
                           <span className="font-black" style={{ color: ps.color }}>~{plan.dailyReturnPercent * plan.durationDays}%</span>
                         </div>
 
@@ -171,17 +176,17 @@ export default function Invest() {
 
         {/* Invest Dialog */}
         <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
-          <DialogContent className="rounded-3xl p-0 max-w-[92vw] w-[420px] overflow-hidden border-0" style={{ background: "#0a0a0a" }}>
+          <DialogContent className="rounded-3xl p-0 max-w-[92vw] w-[420px] overflow-hidden border-0" style={{ background: "var(--theme-bg)" }}>
             {/* Dialog gradient header */}
             <div className="p-6 pb-4" style={{
               background: `linear-gradient(135deg, ${sp.glow.replace("0.4","0.2")}, rgba(0,0,0,0))`,
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: "1px solid var(--theme-border)",
             }}>
               <DialogHeader>
                 <DialogTitle className="text-xl font-black text-white text-center">
                   Invest in <span style={{ color: sp.color }}>{selectedPlan?.name}</span>
                 </DialogTitle>
-                <DialogDescription className="text-center text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <DialogDescription className="text-center text-sm" style={{ color: "var(--theme-t3)" }}>
                   Wallet balance: <span className="font-bold text-white">₹{balanceData?.balance?.toFixed(2) || "0.00"}</span>
                 </DialogDescription>
               </DialogHeader>
@@ -189,7 +194,7 @@ export default function Invest() {
 
             <div className="p-6 space-y-5">
               <div>
-                <label className="text-xs font-bold uppercase tracking-widest block mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>Enter Amount (₹)</label>
+                <label className="text-xs font-bold uppercase tracking-widest block mb-2" style={{ color: "var(--theme-t3)" }}>Enter Amount (₹)</label>
                 <input
                   type="number"
                   value={amount}
@@ -197,13 +202,13 @@ export default function Invest() {
                   placeholder={`${selectedPlan?.minAmount} – ${selectedPlan?.maxAmount}`}
                   className="w-full h-14 text-2xl font-black rounded-xl text-center focus:outline-none focus:ring-1"
                   style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    color: "white",
+                    background: "var(--theme-card2)",
+                    border: "1px solid var(--theme-border)",
+                    color: "var(--theme-t1)",
                     caretColor: sp.color,
                   }}
                 />
-                <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <p className="text-center text-xs mt-2" style={{ color: "var(--theme-t4)" }}>
                   Min ₹{selectedPlan?.minAmount?.toLocaleString("en-IN")} · Max ₹{selectedPlan?.maxAmount?.toLocaleString("en-IN")}
                 </p>
               </div>
@@ -211,11 +216,11 @@ export default function Invest() {
               {amount && !isNaN(parseFloat(amount)) && (
                 <div className="rounded-2xl p-4 space-y-2" style={{ background: `${sp.glow.replace("0.4","0.1")}`, border: `1px solid ${sp.glow.replace("0.4","0.25")}` }}>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>Daily Return</span>
+                    <span className="text-sm" style={{ color: "var(--theme-t2)" }}>Daily Return</span>
                     <span className="font-black text-lg" style={{ color: sp.color }}>+₹{projectedDaily}</span>
                   </div>
-                  <div className="flex justify-between items-center" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "8px" }}>
-                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>Total Earnings</span>
+                  <div className="flex justify-between items-center" style={{ borderTop: "1px solid var(--theme-border)", paddingTop: "8px" }}>
+                    <span className="text-sm" style={{ color: "var(--theme-t2)" }}>Total Earnings</span>
                     <span className="font-black text-xl gradient-text">₹{projectedTotal}</span>
                   </div>
                 </div>

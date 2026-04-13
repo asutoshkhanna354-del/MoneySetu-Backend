@@ -2,10 +2,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetBalance, useGetUserInvestments } from "@workspace/api-client-react";
 import { LogOut, User, Phone, Copy, Shield, Activity, Calendar, TrendingUp } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
+  const { isDark } = useTheme();
   const { user, logout, isAdmin } = useAuth();
   const { data: balanceData } = useGetBalance();
   const { data: investments } = useGetUserInvestments();
@@ -22,8 +24,8 @@ export default function Profile() {
   const totalInvested = investments?.reduce((s, i) => s + parseFloat(i.amount?.toString() || "0"), 0) || 0;
 
   const statCard = (icon: React.ReactNode, label: string, value: string, color: string) => (
-    <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <div className="flex items-center gap-1.5 mb-2" style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+    <div className="rounded-2xl p-4" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+      <div className="flex items-center gap-1.5 mb-2" style={{ color: "var(--theme-t3)", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
         {icon}{label}
       </div>
       <p className="text-xl font-black" style={{ color }}>{value}</p>
@@ -36,10 +38,10 @@ export default function Profile() {
 
         {/* Profile hero card with moving gradient */}
         <div className="relative rounded-3xl overflow-hidden p-6" style={{
-          background: "linear-gradient(135deg, #1a0533, #0a0a0a, #0d0118)",
+          background: isDark ? "linear-gradient(135deg, #1a0533, #0a0a0a, #0d0118)" : "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)",
           backgroundSize: "300% 300%",
           animation: "gradRotate 8s ease infinite",
-          border: "1px solid rgba(139,92,246,0.2)",
+          border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)",
         }}>
           <div className="absolute top-0 right-0 w-48 h-48 aurora-blob" style={{ background: "radial-gradient(circle, rgba(109,40,217,0.25) 0%, transparent 70%)", filter: "blur(40px)" }} />
           <div className="relative z-10 flex items-center gap-4">
@@ -52,7 +54,7 @@ export default function Profile() {
             </div>
             <div>
               <h2 className="text-xl font-black text-white">{user.name}</h2>
-              <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: "var(--theme-t3)" }}>
                 <Phone className="w-3 h-3" /> {user.phone}
               </p>
               {isAdmin && (
@@ -79,7 +81,7 @@ export default function Profile() {
         >
           <div>
             <p className="font-bold text-white text-sm">Your Referral Code</p>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Share and earn bonuses on deposits</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>Share and earn bonuses on deposits</p>
           </div>
           <button
             onClick={copyCode}
@@ -95,8 +97,8 @@ export default function Profile() {
         <div>
           <h3 className="font-black text-white text-lg mb-3">Investment History</h3>
           {!investments || investments.length === 0 ? (
-            <div className="text-center py-10 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)" }}>
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No investments yet</p>
+            <div className="text-center py-10 rounded-2xl" style={{ background: "var(--theme-card)", border: "1px dashed var(--theme-border)" }}>
+              <p className="text-sm" style={{ color: "var(--theme-t4)" }}>No investments yet</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -104,11 +106,11 @@ export default function Profile() {
                 <div
                   key={inv.id}
                   className="rounded-2xl p-4 flex items-center justify-between"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
                 >
                   <div>
                     <p className="font-bold text-white text-sm">{inv.planName}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>
                       {format(new Date(inv.startDate), "MMM d")} – {format(new Date(inv.endDate), "MMM d, yy")}
                     </p>
                   </div>

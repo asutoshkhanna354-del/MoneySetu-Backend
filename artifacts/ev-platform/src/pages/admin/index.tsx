@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Check, X, ShieldAlert, Users, ArrowRightLeft, Zap, Plus, Pencil, Trash2, IndianRupee, Activity, Settings2, Gift, ToggleLeft, ToggleRight } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -81,15 +82,15 @@ function ContactSettingsPanel() {
     <div className="space-y-6">
       <h3 className="font-bold text-lg px-1">Contact Settings</h3>
 
-      <div className="p-5 rounded-2xl space-y-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+      <div className="p-5 rounded-2xl space-y-5" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+        <p className="text-sm" style={{ color: "var(--theme-t3)" }}>
           Set the WhatsApp, Instagram and Telegram links shown on the "Contact Us" button. Leave blank to disable a channel.
         </p>
 
         <form onSubmit={handleSave} className="space-y-4">
           {/* WhatsApp */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
               <span className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "#25D366", fontSize: 10 }}>W</span>
               WhatsApp Link
             </label>
@@ -101,14 +102,14 @@ function ContactSettingsPanel() {
               className="rounded-xl h-10 text-sm"
               style={{ background: "rgba(37,211,102,0.05)", borderColor: whatsapp ? "rgba(37,211,102,0.3)" : undefined }}
             />
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <p className="text-xs" style={{ color: "var(--theme-t4)" }}>
               Format: https://wa.me/91XXXXXXXXXX (include country code, no spaces or dashes)
             </p>
           </div>
 
           {/* Instagram */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
               <span className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#fd5949,#d6249f,#285AEB)", fontSize: 10 }}>IG</span>
               Instagram Link
             </label>
@@ -120,14 +121,14 @@ function ContactSettingsPanel() {
               className="rounded-xl h-10 text-sm"
               style={{ background: "rgba(214,36,159,0.05)", borderColor: instagram ? "rgba(214,36,159,0.3)" : undefined }}
             />
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <p className="text-xs" style={{ color: "var(--theme-t4)" }}>
               Format: https://instagram.com/yourusername or https://instagram.com/p/postid
             </p>
           </div>
 
           {/* Telegram */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
               <span className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "#29B6F6", fontSize: 10 }}>TG</span>
               Telegram Link
             </label>
@@ -139,7 +140,7 @@ function ContactSettingsPanel() {
               className="rounded-xl h-10 text-sm"
               style={{ background: "rgba(41,182,246,0.05)", borderColor: telegram ? "rgba(41,182,246,0.3)" : undefined }}
             />
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <p className="text-xs" style={{ color: "var(--theme-t4)" }}>
               Format: https://t.me/yourusername or https://t.me/yourchannel
             </p>
           </div>
@@ -197,7 +198,7 @@ function ClearProcessingButton({ onCleared }: { onCleared: () => void }) {
   if (confirm) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>Sure?</span>
+        <span className="text-xs font-semibold" style={{ color: "var(--theme-t3)" }}>Sure?</span>
         <button onClick={handleClear} disabled={loading}
           className="px-3 py-1 rounded-lg text-xs font-black"
           style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -205,7 +206,7 @@ function ClearProcessingButton({ onCleared }: { onCleared: () => void }) {
         </button>
         <button onClick={() => setConfirm(false)}
           className="px-3 py-1 rounded-lg text-xs font-semibold"
-          style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)" }}>
+          style={{ background: "var(--theme-card2)", color: "var(--theme-t3)" }}>
           Cancel
         </button>
       </div>
@@ -268,16 +269,16 @@ function FakeActivityList({ onDelete }: { onDelete: (id: number) => void }) {
       .then(r => r.json()).then(setItems).catch(() => {});
   }, []);
 
-  if (items.length === 0) return <div className="p-4 text-center text-sm rounded-2xl" style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)" }}>No fake activities yet. Click "Seed 20 Activities" to get started.</div>;
+  if (items.length === 0) return <div className="p-4 text-center text-sm rounded-2xl" style={{ color: "var(--theme-t3)", background: "var(--theme-card)", border: "1px dashed var(--theme-border)" }}>No fake activities yet. Click "Seed 20 Activities" to get started.</div>;
 
   return (
     <div className="space-y-2">
-      <p className="text-xs px-1" style={{ color: "rgba(255,255,255,0.3)" }}>{items.length} activities</p>
+      <p className="text-xs px-1" style={{ color: "var(--theme-t3)" }}>{items.length} activities</p>
       {items.map((item) => (
-        <div key={item.id} className="p-3 rounded-xl flex items-center justify-between" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div key={item.id} className="p-3 rounded-xl flex items-center justify-between" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
           <div>
-            <p className="text-sm font-semibold text-white">{item.userName} <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span> <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.4)" }}>{item.type}</span></p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>₹{parseFloat(item.amount).toLocaleString("en-IN")} {item.city && `· ${item.city}`}</p>
+            <p className="text-sm font-semibold text-white">{item.userName} <span style={{ color: "var(--theme-t4)" }}>·</span> <span className="text-xs capitalize" style={{ color: "var(--theme-t3)" }}>{item.type}</span></p>
+            <p className="text-xs" style={{ color: "var(--theme-t4)" }}>₹{parseFloat(item.amount).toLocaleString("en-IN")} {item.city && `· ${item.city}`}</p>
           </div>
           <button onClick={() => { onDelete(item.id); setItems(prev => prev.filter(i => i.id !== item.id)); }} className="text-red-400 p-1.5 rounded-xl transition-colors hover:text-red-300">
             <Trash2 className="w-4 h-4" />
@@ -341,7 +342,7 @@ function GiftCodesPanel() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(168,85,247,0.15)" }}>
+      <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--theme-card)", border: "1px solid rgba(168,85,247,0.15)" }}>
         <p className="font-bold text-sm text-white">Create New Gift Code</p>
         <form onSubmit={handleCreate} className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -375,10 +376,10 @@ function GiftCodesPanel() {
 
       <div className="space-y-2">
         <p className="font-bold text-sm text-white px-1">All Gift Codes ({codes.length})</p>
-        {loading && <p className="text-sm text-center py-6" style={{ color: "rgba(255,255,255,0.3)" }}>Loading…</p>}
-        {!loading && codes.length === 0 && <p className="text-sm text-center py-6" style={{ color: "rgba(255,255,255,0.3)" }}>No gift codes yet. Create one above.</p>}
+        {loading && <p className="text-sm text-center py-6" style={{ color: "var(--theme-t3)" }}>Loading…</p>}
+        {!loading && codes.length === 0 && <p className="text-sm text-center py-6" style={{ color: "var(--theme-t3)" }}>No gift codes yet. Create one above.</p>}
         {codes.map(c => (
-          <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="font-mono font-black text-sm text-white">{c.code}</span>
@@ -387,7 +388,7 @@ function GiftCodesPanel() {
                 </span>
                 {c.requiresPlan && <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(168,85,247,0.1)", color: "#a855f7" }}>Plan req.</span>}
               </div>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>
                 ₹{c.amount} · {c.uses}/{c.maxUses} redeemed
               </p>
             </div>
@@ -411,6 +412,7 @@ function GiftCodesPanel() {
 }
 
 export default function AdminPanel() {
+  const { isDark } = useTheme();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -584,18 +586,18 @@ export default function AdminPanel() {
   return (
     <AppLayout hideNav>
       <div className="space-y-6 pb-10">
-        <div className="flex items-center space-x-3 mb-6 p-5 rounded-3xl" style={{ background: "linear-gradient(135deg, #1a0533, #0a0a0a)", border: "1px solid rgba(139,92,246,0.2)", backgroundSize: "300% 300%", animation: "gradRotate 8s ease infinite" }}>
+        <div className="flex items-center space-x-3 mb-6 p-5 rounded-3xl" style={{ background: isDark ? "linear-gradient(135deg, #1a0533, #0a0a0a)" : "linear-gradient(135deg, #ede8ff, #e8dfff, #f0eaff)", border: isDark ? "1px solid rgba(139,92,246,0.2)" : "1px solid rgba(109,40,217,0.18)", backgroundSize: "300% 300%", animation: "gradRotate 8s ease infinite" }}>
           <div className="p-3 rounded-2xl" style={{ background: "rgba(139,92,246,0.2)", boxShadow: "0 0 20px rgba(139,92,246,0.3)" }}>
             <ShieldAlert className="w-8 h-8 text-purple-400" />
           </div>
           <div>
             <h1 className="text-xl font-black text-white">Admin Dashboard</h1>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Manage platform operations</p>
+            <p className="text-sm" style={{ color: "var(--theme-t3)" }}>Manage platform operations</p>
           </div>
         </div>
 
         <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto rounded-2xl p-1 mb-4 gap-1" style={{ background: "rgba(255,255,255,0.05)" }}>
+          <TabsList className="grid w-full grid-cols-3 h-auto rounded-2xl p-1 mb-4 gap-1" style={{ background: "var(--theme-card2)" }}>
             <TabsTrigger value="transactions" className="rounded-xl font-bold text-[10px] h-9">
               <ArrowRightLeft className="w-3.5 h-3.5 mr-1" /> Deposits
             </TabsTrigger>
@@ -623,14 +625,14 @@ export default function AdminPanel() {
               <ClearProcessingButton onCleared={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] })} />
             </div>
             {pendingTxs.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" }}>No pending transactions.</div>
+              <div className="p-8 text-center rounded-2xl" style={{ background: "var(--theme-card)", border: "1px dashed var(--theme-border)", color: "var(--theme-t3)" }}>No pending transactions.</div>
             ) : (
               pendingTxs.map((tx) => {
                 const isWithdrawal = tx.type === "withdrawal";
                 const accentColor = isWithdrawal ? "rgba(249,115,22,0.2)" : "rgba(59,130,246,0.15)";
                 const accentBorder = isWithdrawal ? "rgba(249,115,22,0.25)" : "rgba(59,130,246,0.2)";
                 return (
-                  <div key={tx.id} className="p-4 rounded-2xl space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${accentBorder}` }}>
+                  <div key={tx.id} className="p-4 rounded-2xl space-y-3" style={{ background: "var(--theme-card)", border: `1px solid ${accentBorder}` }}>
                     {/* Header */}
                     <div className="flex justify-between items-start">
                       <div>
@@ -638,28 +640,28 @@ export default function AdminPanel() {
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" style={{ background: accentColor, color: isWithdrawal ? "#fb923c" : "#60a5fa" }}>
                             {tx.type}
                           </span>
-                          {tx.paymentMethod && <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>{tx.paymentMethod}</span>}
+                          {tx.paymentMethod && <span className="text-[10px] font-semibold" style={{ color: "var(--theme-t3)" }}>{tx.paymentMethod}</span>}
                         </div>
                         <p className="font-bold text-base text-white mt-1">{tx.userName}</p>
-                        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{format(new Date(tx.createdAt), "MMM d, h:mm a")}</p>
+                        <p className="text-[10px]" style={{ color: "var(--theme-t3)" }}>{format(new Date(tx.createdAt), "MMM d, h:mm a")}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-black text-2xl" style={{ color: isWithdrawal ? "#fb923c" : "#a855f7" }}>₹{parseFloat(tx.amount).toLocaleString("en-IN")}</p>
-                        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>#{tx.id}</p>
+                        <p className="text-[10px]" style={{ color: "var(--theme-t4)" }}>#{tx.id}</p>
                       </div>
                     </div>
 
                     {/* Payment / UPI details */}
                     {tx.notes && (
-                      <div className="p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>Details</p>
-                        <p className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.55)" }}>{tx.notes}</p>
+                      <div className="p-2.5 rounded-xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+                        <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "var(--theme-t4)" }}>Details</p>
+                        <p className="text-xs font-mono" style={{ color: "var(--theme-t2)" }}>{tx.notes}</p>
                       </div>
                     )}
 
                     {/* Admin message */}
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--theme-t3)" }}>
                         Message to customer (optional)
                       </label>
                       <textarea
@@ -667,7 +669,7 @@ export default function AdminPanel() {
                         placeholder={isWithdrawal ? "e.g. Payment sent to your UPI. Thank you!" : "e.g. Deposit confirmed. Happy investing!"}
                         value={txMessages[tx.id] || ""}
                         onChange={e => setTxMessages(prev => ({ ...prev, [tx.id]: e.target.value }))}
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "white", borderRadius: "10px", padding: "10px 12px", width: "100%", fontSize: "13px", outline: "none", resize: "none" }}
+                        style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-border)", color: "var(--theme-t1)", borderRadius: "10px", padding: "10px 12px", width: "100%", fontSize: "13px", outline: "none", resize: "none" }}
                       />
                     </div>
 
@@ -698,11 +700,11 @@ export default function AdminPanel() {
 
             <h3 className="font-bold text-lg px-1 pt-4 text-white">All Transactions</h3>
             {transactions?.slice(0, 20).map((tx) => (
-              <div key={tx.id} className="p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <div key={tx.id} className="p-3 rounded-2xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-semibold text-sm text-white">{tx.userName}</p>
-                    <p className="text-xs uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <p className="text-xs uppercase" style={{ color: "var(--theme-t3)" }}>
                       {tx.type} ·{" "}
                       <span style={{
                         color: tx.status === "approved"  ? "#4ade80"
@@ -732,22 +734,22 @@ export default function AdminPanel() {
           <TabsContent value="users" className="space-y-4 mt-0">
             <h3 className="font-bold text-lg px-1">Platform Users</h3>
             {users?.map((u) => (
-              <div key={u.id} className="p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div key={u.id} className="p-4 rounded-2xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-bold text-sm text-white">
                       {u.name}{" "}
                       {u.isAdmin && <span className="text-purple-400 text-[10px] uppercase ml-1">(Admin)</span>}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{u.phone || u.username || "—"}</p>
-                    <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>{u.phone || u.username || "—"}</p>
+                    <p className="text-xs mt-1" style={{ color: "var(--theme-t4)" }}>
                       Invested: ₹{u.totalInvested?.toFixed(2)} · Earnings: ₹{u.totalEarnings?.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-purple-400 text-lg">₹{u.balance?.toFixed(2)}</p>
                     <button
-                      className="text-[10px] underline mt-1 block" style={{ color: "rgba(255,255,255,0.35)" }}
+                      className="text-[10px] underline mt-1 block" style={{ color: "var(--theme-t3)" }}
                       onClick={() => { setEditBalanceUserId(u.id); setNewBalance(u.balance?.toFixed(2) || "0"); }}
                     >
                       Edit Balance
@@ -771,7 +773,7 @@ export default function AdminPanel() {
                       onChange={(e) => setNewBalance(e.target.value)}
                       placeholder="New balance (₹)"
                       className="flex-1 h-9 rounded-xl text-sm px-3 focus:outline-none"
-                      style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+                      style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-borderhi)", color: "var(--theme-t1)" }}
                     />
                     <Button
                       size="sm"
@@ -866,7 +868,7 @@ export default function AdminPanel() {
                     className="rounded-xl h-10 text-sm"
                   />
                   {planForm.imageUrl && (
-                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--theme-border)" }}>
                       <img src={planForm.imageUrl} alt="Plan preview" className="w-full h-32 object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     </div>
                   )}
@@ -887,7 +889,7 @@ export default function AdminPanel() {
             )}
 
             {plans?.map((plan) => (
-              <div key={plan.id} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div key={plan.id} className="rounded-2xl overflow-hidden" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
                 {(plan as any).imageUrl && (
                   <img src={(plan as any).imageUrl} alt={plan.name} className="w-full h-28 object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 )}
@@ -895,12 +897,12 @@ export default function AdminPanel() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-bold text-sm text-white">{plan.name}</p>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={plan.isActive ? { background: "rgba(74,222,128,0.15)", color: "#4ade80" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)" }}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={plan.isActive ? { background: "rgba(74,222,128,0.15)", color: "#4ade80" } : { background: "var(--theme-card2)", color: "var(--theme-t3)" }}>
                         {plan.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
-                    {plan.description && <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{plan.description}</p>}
-                    <div className="flex gap-3 mt-2 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {plan.description && <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>{plan.description}</p>}
+                    <div className="flex gap-3 mt-2 text-xs" style={{ color: "var(--theme-t3)" }}>
                       <span>₹{plan.minAmount}–₹{plan.maxAmount}</span>
                       <span className="text-purple-400 font-bold">{plan.dailyReturnPercent}%/day</span>
                       <span>{plan.durationDays} days</span>
@@ -908,7 +910,7 @@ export default function AdminPanel() {
                   </div>
                   <div className="flex gap-1 ml-2">
                     <button
-                      className="p-2 rounded-xl transition-colors" style={{ color: "rgba(255,255,255,0.3)" }}
+                      className="p-2 rounded-xl transition-colors" style={{ color: "var(--theme-t3)" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "#a855f7")}
                       onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
                       onClick={() => startEdit(plan)}
@@ -916,7 +918,7 @@ export default function AdminPanel() {
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
-                      className="p-2 rounded-xl transition-colors" style={{ color: "rgba(255,255,255,0.3)" }}
+                      className="p-2 rounded-xl transition-colors" style={{ color: "var(--theme-t3)" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "#f87171")}
                       onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
                       onClick={() => {
