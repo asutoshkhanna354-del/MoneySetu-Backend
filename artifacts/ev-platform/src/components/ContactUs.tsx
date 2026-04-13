@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, MessageCircle } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const WhatsAppSVG = () => (
   <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
@@ -38,6 +40,7 @@ const TelegramSVG = () => (
 export function ContactUs() {
   const [open, setOpen] = useState(false);
   const [links, setLinks] = useState({ whatsapp: "", instagram: "", telegram: "" });
+  const { isDark } = useTheme();
 
   useEffect(() => {
     fetch("/api/settings/contact")
@@ -50,157 +53,164 @@ export function ContactUs() {
   const hasInstagram = links.instagram.trim() !== "";
   const hasTelegram  = links.telegram.trim()  !== "";
 
+  const channels = [
+    {
+      Icon: WhatsAppSVG,
+      label: "WhatsApp",
+      sub: hasWhatsapp ? "Chat with us" : "Not configured yet",
+      href: links.whatsapp,
+      active: hasWhatsapp,
+      openColor: "#25D366",
+      openBg: "rgba(37,211,102,0.12)",
+      borderActive: "rgba(37,211,102,0.3)",
+      rowBg: isDark ? "rgba(37,211,102,0.08)" : "rgba(37,211,102,0.05)",
+    },
+    {
+      Icon: InstagramSVG,
+      label: "Instagram",
+      sub: hasInstagram ? "Follow & DM us" : "Not configured yet",
+      href: links.instagram,
+      active: hasInstagram,
+      openColor: "#d6249f",
+      openBg: "rgba(214,36,159,0.12)",
+      borderActive: "rgba(214,36,159,0.3)",
+      rowBg: isDark ? "rgba(214,36,159,0.08)" : "rgba(214,36,159,0.05)",
+    },
+    {
+      Icon: TelegramSVG,
+      label: "Telegram",
+      sub: hasTelegram ? "Message us on Telegram" : "Not configured yet",
+      href: links.telegram,
+      active: hasTelegram,
+      openColor: "#29B6F6",
+      openBg: "rgba(41,182,246,0.12)",
+      borderActive: "rgba(41,182,246,0.3)",
+      rowBg: isDark ? "rgba(41,182,246,0.08)" : "rgba(41,182,246,0.05)",
+    },
+  ];
+
+  const modalBg = isDark
+    ? "linear-gradient(145deg, #0f0f1a, #1a1030)"
+    : "#ffffff";
+  const modalBorder = isDark
+    ? "1px solid rgba(168,85,247,0.25)"
+    : "1px solid rgba(108,76,241,0.15)";
+  const titleColor = isDark ? "#ffffff" : "var(--theme-t1)";
+  const subColor   = isDark ? "rgba(255,255,255,0.4)" : "var(--theme-t3)";
+  const rowInactive = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)";
+  const rowInactiveBorder = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)";
+  const itemLabelColor = isDark ? "#ffffff" : "var(--theme-t1)";
+  const itemSubColor   = isDark ? "rgba(255,255,255,0.35)" : "var(--theme-t3)";
+  const closeBtnBg     = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+  const closeBtnColor  = isDark ? "rgba(255,255,255,0.4)" : "var(--theme-t3)";
+
   return (
     <>
       {/* Floating Contact Us button */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+        className="contact-us-btn fixed right-4 md:right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg"
         style={{
-          background: "linear-gradient(135deg, #7B2FBE, #a855f7)",
+          background: "linear-gradient(135deg, #6C4CF1, #8E44AD)",
           color: "white",
-          boxShadow: "0 4px 24px rgba(168,85,247,0.45)",
+          boxShadow: "0 4px 24px rgba(108,76,241,0.45)",
         }}
       >
         <MessageCircle className="w-4 h-4" />
         <span>Contact Us</span>
-      </button>
+      </motion.button>
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-          onClick={() => setOpen(false)}
-        >
-          {/* Modal */}
-          <div
-            className="relative w-full max-w-sm mx-4 mb-8 md:mb-0 p-6 rounded-3xl"
-            style={{
-              background: "linear-gradient(145deg, #0f0f1a, #1a1030)",
-              border: "1px solid rgba(168,85,247,0.25)",
-              boxShadow: "0 0 60px rgba(168,85,247,0.2)",
-            }}
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}
+            onClick={() => setOpen(false)}
           >
-            {/* Close */}
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full transition-colors"
-              style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)" }}
+            <motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 22, stiffness: 300 } }}
+              exit={{ opacity: 0, y: 16, scale: 0.95 }}
+              className="relative w-full max-w-sm mx-4 mb-8 md:mb-0 p-6 rounded-3xl"
+              style={{
+                background: modalBg,
+                border: modalBorder,
+                boxShadow: isDark ? "0 0 60px rgba(168,85,247,0.2)" : "0 8px 48px rgba(0,0,0,0.14)",
+              }}
+              onClick={e => e.stopPropagation()}
             >
-              <X className="w-4 h-4" />
-            </button>
+              {/* Top color bar */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-3xl" style={{ background: "linear-gradient(90deg,#6C4CF1,#8E44AD)" }} />
 
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)" }}>
-                <MessageCircle className="w-5 h-5 text-purple-400" />
+              {/* Close */}
+              <button
+                onClick={() => setOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full transition-colors"
+                style={{ color: closeBtnColor, background: closeBtnBg }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                  style={{ background: "rgba(108,76,241,0.12)", border: "1px solid rgba(108,76,241,0.25)" }}>
+                  <MessageCircle className="w-5 h-5" style={{ color: "#6C4CF1" }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg" style={{ color: titleColor }}>Contact Us</h3>
+                  <p className="text-xs" style={{ color: subColor }}>
+                    {hasWhatsapp || hasInstagram || hasTelegram
+                      ? "Reach us on your preferred platform"
+                      : "No contact channels available yet"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-white text-lg">Contact Us</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  {hasWhatsapp || hasInstagram || hasTelegram ? "Reach us on your preferred platform" : "No contact channels available yet"}
+
+              {/* Channel buttons */}
+              <div className="space-y-2.5">
+                {channels.map(({ Icon, label, sub, href, active, openColor, openBg, borderActive, rowBg }) => (
+                  <a
+                    key={label}
+                    href={active ? href : undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={!active ? e => e.preventDefault() : undefined}
+                    className={`flex items-center gap-4 w-full px-4 py-3.5 rounded-2xl transition-all ${
+                      active ? "hover:scale-[1.02] active:scale-[0.98] cursor-pointer" : "cursor-not-allowed opacity-40"
+                    }`}
+                    style={{
+                      background: active ? rowBg : rowInactive,
+                      border: `1px solid ${active ? borderActive : rowInactiveBorder}`,
+                    }}
+                  >
+                    <Icon />
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: itemLabelColor }}>{label}</p>
+                      <p className="text-xs truncate" style={{ color: itemSubColor }}>{sub}</p>
+                    </div>
+                    {active && (
+                      <span className="ml-auto text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+                        style={{ background: openBg, color: openColor }}>Open</span>
+                    )}
+                  </a>
+                ))}
+              </div>
+
+              {(!hasWhatsapp && !hasInstagram && !hasTelegram) && (
+                <p className="mt-4 text-center text-xs" style={{ color: isDark ? "rgba(255,255,255,0.2)" : "var(--theme-t4)" }}>
+                  Admin can enable contact channels in the admin panel.
                 </p>
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="space-y-3">
-              {/* WhatsApp */}
-              <a
-                href={hasWhatsapp ? links.whatsapp : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={!hasWhatsapp ? (e) => e.preventDefault() : undefined}
-                className={`flex items-center gap-4 w-full px-5 py-4 rounded-2xl transition-all ${
-                  hasWhatsapp ? "hover:scale-[1.02] active:scale-[0.98] cursor-pointer" : "cursor-not-allowed opacity-40"
-                }`}
-                style={{
-                  background: hasWhatsapp ? "linear-gradient(135deg, rgba(37,211,102,0.12), rgba(37,211,102,0.06))" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${hasWhatsapp ? "rgba(37,211,102,0.3)" : "rgba(255,255,255,0.07)"}`,
-                  boxShadow: hasWhatsapp ? "0 0 20px rgba(37,211,102,0.08)" : "none",
-                }}
-              >
-                <WhatsAppSVG />
-                <div className="text-left">
-                  <p className="font-semibold text-sm text-white">WhatsApp</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {hasWhatsapp ? "Chat with us" : "Not configured yet"}
-                  </p>
-                </div>
-                {hasWhatsapp && (
-                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(37,211,102,0.15)", color: "#25D366" }}>Open</span>
-                )}
-              </a>
-
-              {/* Instagram */}
-              <a
-                href={hasInstagram ? links.instagram : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={!hasInstagram ? (e) => e.preventDefault() : undefined}
-                className={`flex items-center gap-4 w-full px-5 py-4 rounded-2xl transition-all ${
-                  hasInstagram ? "hover:scale-[1.02] active:scale-[0.98] cursor-pointer" : "cursor-not-allowed opacity-40"
-                }`}
-                style={{
-                  background: hasInstagram ? "linear-gradient(135deg, rgba(214,36,159,0.12), rgba(253,89,73,0.06))" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${hasInstagram ? "rgba(214,36,159,0.3)" : "rgba(255,255,255,0.07)"}`,
-                  boxShadow: hasInstagram ? "0 0 20px rgba(214,36,159,0.08)" : "none",
-                }}
-              >
-                <InstagramSVG />
-                <div className="text-left">
-                  <p className="font-semibold text-sm text-white">Instagram</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {hasInstagram ? "Follow & DM us" : "Not configured yet"}
-                  </p>
-                </div>
-                {hasInstagram && (
-                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(214,36,159,0.15)", color: "#d6249f" }}>Open</span>
-                )}
-              </a>
-
-              {/* Telegram */}
-              <a
-                href={hasTelegram ? links.telegram : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={!hasTelegram ? (e) => e.preventDefault() : undefined}
-                className={`flex items-center gap-4 w-full px-5 py-4 rounded-2xl transition-all ${
-                  hasTelegram ? "hover:scale-[1.02] active:scale-[0.98] cursor-pointer" : "cursor-not-allowed opacity-40"
-                }`}
-                style={{
-                  background: hasTelegram ? "linear-gradient(135deg, rgba(41,182,246,0.12), rgba(41,182,246,0.06))" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${hasTelegram ? "rgba(41,182,246,0.3)" : "rgba(255,255,255,0.07)"}`,
-                  boxShadow: hasTelegram ? "0 0 20px rgba(41,182,246,0.08)" : "none",
-                }}
-              >
-                <TelegramSVG />
-                <div className="text-left">
-                  <p className="font-semibold text-sm text-white">Telegram</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {hasTelegram ? "Message us on Telegram" : "Not configured yet"}
-                  </p>
-                </div>
-                {hasTelegram && (
-                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(41,182,246,0.15)", color: "#29B6F6" }}>Open</span>
-                )}
-              </a>
-            </div>
-
-            {(!hasWhatsapp && !hasInstagram && !hasTelegram) && (
-              <p className="mt-4 text-center text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-                Admin can enable contact channels in the admin panel.
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

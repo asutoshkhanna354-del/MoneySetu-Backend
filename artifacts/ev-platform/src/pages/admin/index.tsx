@@ -48,13 +48,20 @@ function ContactSettingsPanel() {
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
   const [telegram, setTelegram] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings/contact")
       .then(r => r.json())
-      .then(d => { setWhatsapp(d.whatsapp || ""); setInstagram(d.instagram || ""); setTelegram(d.telegram || ""); setLoaded(true); })
+      .then(d => {
+        setWhatsapp(d.whatsapp || "");
+        setInstagram(d.instagram || "");
+        setTelegram(d.telegram || "");
+        setSupportEmail(d.supportEmail || "");
+        setLoaded(true);
+      })
       .catch(() => setLoaded(true));
   }, []);
 
@@ -66,7 +73,12 @@ function ContactSettingsPanel() {
       const res = await fetch("/api/admin/settings/contact", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ whatsapp: whatsapp.trim(), instagram: instagram.trim(), telegram: telegram.trim() }),
+        body: JSON.stringify({
+          whatsapp: whatsapp.trim(),
+          instagram: instagram.trim(),
+          telegram: telegram.trim(),
+          supportEmail: supportEmail.trim(),
+        }),
       });
       if (res.ok) {
         toast({ title: "Contact settings saved!" });
@@ -145,6 +157,26 @@ function ContactSettingsPanel() {
             </p>
           </div>
 
+          {/* Support Email */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: "#6C4CF1", fontSize: 10 }}>@</span>
+              Support Email
+            </label>
+            <Input
+              placeholder="support@moneysetu.com"
+              type="email"
+              value={loaded ? supportEmail : "Loading..."}
+              onChange={e => setSupportEmail(e.target.value)}
+              disabled={!loaded}
+              className="rounded-xl h-10 text-sm"
+              style={{ background: "rgba(108,76,241,0.05)", borderColor: supportEmail ? "rgba(108,76,241,0.3)" : undefined }}
+            />
+            <p className="text-xs" style={{ color: "var(--theme-t4)" }}>
+              Used for the "Email Us" button on the Help & Support page.
+            </p>
+          </div>
+
           {/* Status preview */}
           <div className="flex flex-wrap gap-3 pt-1">
             <span className={`text-xs px-3 py-1 rounded-full font-semibold ${whatsapp ? "bg-green-900/30 text-green-400" : "bg-white/5 text-white/30"}`}>
@@ -155,6 +187,9 @@ function ContactSettingsPanel() {
             </span>
             <span className={`text-xs px-3 py-1 rounded-full font-semibold ${telegram ? "bg-sky-900/30 text-sky-400" : "bg-white/5 text-white/30"}`}>
               Telegram: {telegram ? "Enabled" : "Disabled"}
+            </span>
+            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${supportEmail ? "bg-purple-900/30 text-purple-400" : "bg-white/5 text-white/30"}`}>
+              Support Email: {supportEmail ? "Set" : "Not Set"}
             </span>
           </div>
 
