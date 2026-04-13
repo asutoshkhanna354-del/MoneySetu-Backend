@@ -83,10 +83,20 @@ function Sidebar({ isAdmin }: { isAdmin: boolean }) {
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5" style={{ borderBottom: "1px solid var(--theme-border)" }}>
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,#6C4CF1,#8E44AD)", boxShadow: "0 4px 14px rgba(108,76,241,0.4)" }}
+          className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden"
+          style={{
+            background: isDark ? "#0F1629" : "#ffffff",
+            boxShadow: isDark
+              ? "0 0 0 2px rgba(108,76,241,0.35), 0 4px 16px rgba(108,76,241,0.3)"
+              : "0 2px 10px rgba(0,0,0,0.12)",
+          }}
         >
-          <span className="text-white font-black text-sm">M</span>
+          <img
+            src="/logo.png"
+            alt="MoneySetu"
+            className="w-full h-full object-cover"
+            style={{ filter: isDark ? "brightness(1.05) saturate(1.1)" : "none" }}
+          />
         </div>
         <span className="font-black text-xl tracking-tight" style={{ color: "var(--theme-t1)" }}>
           Money<span className="gradient-text">Setu</span>
@@ -301,6 +311,7 @@ function DesktopTopBar({ isAdmin }: { isAdmin: boolean }) {
 export function AppLayout({ children, hideNav = false }: { children: React.ReactNode; hideNav?: boolean }) {
   const { isLoading, isAuthenticated, isAdmin } = useAuth();
   const { user } = useAuth();
+  const { isDark } = useTheme();
 
   if (isLoading) {
     return (
@@ -337,10 +348,20 @@ export function AppLayout({ children, hideNav = false }: { children: React.React
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#6C4CF1,#8E44AD)" }}
+              className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden"
+              style={{
+                background: isDark ? "#0F1629" : "#ffffff",
+                boxShadow: isDark
+                  ? "0 0 0 1.5px rgba(108,76,241,0.4), 0 2px 10px rgba(108,76,241,0.25)"
+                  : "0 1px 6px rgba(0,0,0,0.12)",
+              }}
             >
-              <span className="text-white font-black text-sm">M</span>
+              <img
+                src="/logo.png"
+                alt="MoneySetu"
+                className="w-full h-full object-cover"
+                style={{ filter: isDark ? "brightness(1.05) saturate(1.1)" : "none" }}
+              />
             </div>
             <span className="font-black text-base" style={{ color: "var(--theme-t1)" }}>
               Money<span className="gradient-text">Setu</span>
