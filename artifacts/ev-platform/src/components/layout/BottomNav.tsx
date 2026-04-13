@@ -1,15 +1,15 @@
 import { Link, useLocation } from "wouter";
-import { Home, Zap, ArrowUpRight, User, Wallet } from "lucide-react";
+import { Home, Zap, Wallet, Clock, User } from "lucide-react";
 
 export function BottomNav() {
   const [location] = useLocation();
 
   const navItems = [
-    { path: "/dashboard",     label: "Home",    icon: Home,         activeColor: "#a855f7" },
-    { path: "/invest",        label: "Invest",  icon: Zap,          activeColor: "#a855f7" },
-    { path: "/earn-withdraw", label: "Withdraw",icon: ArrowUpRight,  activeColor: "#4ade80" },
-    { path: "/withdraw",      label: "Plans",   icon: Wallet,        activeColor: "#fb923c" },
-    { path: "/profile",       label: "Profile", icon: User,          activeColor: "#a855f7" },
+    { path: "/dashboard",    label: "Home",    icon: Home,   activeColor: "#6C4CF1" },
+    { path: "/invest",       label: "Invest",  icon: Zap,    activeColor: "#6C4CF1" },
+    { path: "/withdraw",     label: "Plans",   icon: Wallet, activeColor: "#6C4CF1" },
+    { path: "/transactions", label: "History", icon: Clock,  activeColor: "#6C4CF1" },
+    { path: "/profile",      label: "Profile", icon: User,   activeColor: "#6C4CF1" },
   ];
 
   return (
@@ -33,10 +33,10 @@ export function BottomNav() {
                 style={{ color: isActive ? item.activeColor : "var(--theme-t4)" }}
               >
                 <div
-                  className="p-1.5 rounded-xl transition-all duration-300"
+                  className="p-1.5 rounded-xl transition-all duration-200"
                   style={isActive ? {
-                    background: `${item.activeColor}22`,
-                    boxShadow: `0 0 10px ${item.activeColor}44`,
+                    background: `rgba(108,76,241,0.15)`,
+                    boxShadow: `0 0 10px rgba(108,76,241,0.3)`,
                     transform: "scale(1.1)",
                   } : {}}
                 >
