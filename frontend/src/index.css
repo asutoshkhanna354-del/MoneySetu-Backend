@@ -1,0 +1,387 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Poppins', sans-serif;
+  --font-display: 'Poppins', sans-serif;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+/* ─── OLED DARK THEME (default) ─────────────────── */
+:root {
+  --background: 0 0% 0%;        /* Pure #000000 OLED black */
+  --foreground: 0 0% 98%;       /* Near white */
+
+  --card: 0 0% 4%;              /* #0a0a0a */
+  --card-foreground: 0 0% 96%;
+
+  --popover: 0 0% 4%;
+  --popover-foreground: 0 0% 96%;
+
+  --primary: 275 75% 60%;       /* Vivid purple */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 271 67% 45%;     /* Deep purple */
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 45%;
+
+  --accent: 270 91% 68%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 10%;           /* #1a1a1a subtle borders */
+  --input: 0 0% 8%;
+  --ring: 275 75% 60%;
+
+  --radius: 1rem;
+
+  /* ── App-level theme tokens (dark default) ── */
+  --theme-bg:       #000000;
+  --theme-sidebar:  #030303;
+  --theme-sidebar-b: rgba(255,255,255,0.05);
+  --theme-card:     rgba(255,255,255,0.03);
+  --theme-card2:    rgba(255,255,255,0.055);
+  --theme-card3:    rgba(255,255,255,0.08);
+  --theme-border:   rgba(255,255,255,0.06);
+  --theme-borderhi: rgba(255,255,255,0.12);
+  --theme-panel:    rgba(0,0,0,0.3);
+  --theme-panel2:   rgba(0,0,0,0.5);
+  --theme-t1:       #ffffff;
+  --theme-t2:       rgba(255,255,255,0.6);
+  --theme-t3:       rgba(255,255,255,0.38);
+  --theme-t4:       rgba(255,255,255,0.22);
+  --theme-t5:       rgba(255,255,255,0.12);
+  --theme-input:    rgba(255,255,255,0.05);
+  --theme-inputb:   rgba(255,255,255,0.08);
+  --theme-header:   rgba(0,0,0,0.85);
+}
+
+/* ─── LIGHT THEME OVERRIDES ─────────────────── */
+html.light {
+  --background: 240 20% 98%;
+  --foreground: 240 10% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 8%;
+  --primary: 275 75% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 271 40% 92%;
+  --secondary-foreground: 271 67% 30%;
+  --muted: 240 20% 96%;
+  --muted-foreground: 240 8% 46%;
+  --accent: 270 60% 88%;
+  --accent-foreground: 270 80% 30%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 15% 88%;
+  --input: 240 20% 96%;
+  --ring: 275 75% 55%;
+
+  /* App-level theme tokens (light) */
+  --theme-bg:       #f5f3ff;
+  --theme-sidebar:  #ffffff;
+  --theme-sidebar-b: rgba(109,40,217,0.1);
+  --theme-card:     #ffffff;
+  --theme-card2:    #f8f6ff;
+  --theme-card3:    #f0eaff;
+  --theme-border:   rgba(109,40,217,0.14);
+  --theme-borderhi: rgba(109,40,217,0.22);
+  --theme-panel:    rgba(109,40,217,0.04);
+  --theme-panel2:   rgba(109,40,217,0.07);
+  --theme-t1:       #0a0a18;
+  --theme-t2:       rgba(10,10,24,0.72);
+  --theme-t3:       rgba(10,10,24,0.50);
+  --theme-t4:       rgba(10,10,24,0.33);
+  --theme-t5:       rgba(10,10,24,0.18);
+  --theme-input:    rgba(109,40,217,0.04);
+  --theme-inputb:   rgba(109,40,217,0.16);
+  --theme-header:   rgba(245,243,255,0.9);
+}
+
+/* Light mode global overrides for Tailwind utility classes */
+html.light body {
+  background-color: var(--theme-bg);
+  color: var(--theme-t1);
+}
+html.light .text-white   { color: var(--theme-t1) !important; }
+html.light .text-white\/40 { color: var(--theme-t3) !important; }
+html.light .text-white\/35 { color: var(--theme-t3) !important; }
+html.light .text-white\/30 { color: var(--theme-t4) !important; }
+html.light .oled-card {
+  background: var(--theme-card) !important;
+  border-color: var(--theme-border) !important;
+}
+html.light .shimmer {
+  background: linear-gradient(90deg, #ece8ff 25%, #f5f2ff 37%, #ece8ff 63%);
+}
+html.light ::-webkit-scrollbar-track { background: #f5f3ff; }
+
+/* ─── GLOBAL BASE ─────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  html {
+    scroll-behavior: smooth;
+    height: -webkit-fill-available;
+  }
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    background-color: #000000;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+  ::selection {
+    background: rgba(139, 92, 246, 0.35);
+    color: #fff;
+  }
+}
+
+/* ─── ANDROID / MOBILE SAFE AREA ─────────────── */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.h-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ─── CONTACT BUTTON MOBILE POSITION ─────────── */
+.contact-us-btn {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .contact-us-btn {
+    bottom: 2rem;
+  }
+}
+
+/* ─── OLED SCROLLBAR ─────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.4); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.7); }
+
+/* ─── KEYFRAME ANIMATIONS ─────────────────────── */
+
+/* Aurora blobs */
+@keyframes aurora1 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.6; }
+  25%       { transform: translate(80px, -60px) scale(1.15) rotate(45deg); opacity: 0.8; }
+  50%       { transform: translate(-40px, 80px) scale(0.9) rotate(90deg); opacity: 0.5; }
+  75%       { transform: translate(60px, 40px) scale(1.1) rotate(135deg); opacity: 0.7; }
+}
+@keyframes aurora2 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.5; }
+  33%       { transform: translate(-80px, 60px) scale(1.2) rotate(-60deg); opacity: 0.7; }
+  66%       { transform: translate(50px, -80px) scale(0.85) rotate(120deg); opacity: 0.4; }
+}
+@keyframes aurora3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  40%       { transform: translate(100px, 50px) scale(1.3); opacity: 0.6; }
+  80%       { transform: translate(-60px, -40px) scale(0.8); opacity: 0.3; }
+}
+
+/* Flowing wave */
+@keyframes waveFlow {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Floating */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-18px); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-28px) rotate(3deg); }
+}
+
+/* Pulse glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px 0 rgba(139, 92, 246, 0.25), 0 0 60px 0 rgba(139, 92, 246, 0.08); }
+  50%       { box-shadow: 0 0 40px 4px rgba(139, 92, 246, 0.5), 0 0 100px 0 rgba(139, 92, 246, 0.2); }
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+/* Gradient rotate */
+@keyframes gradRotate {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Ticker slide */
+@keyframes tickerSlide {
+  0%   { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+/* Particle float */
+@keyframes particleFloat {
+  0%   { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(-10vh) translateX(40px) scale(1.2); opacity: 0; }
+}
+
+/* Border rotate */
+@keyframes borderSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ─── UTILITY CLASSES ─────────────────────────── */
+
+/* Aurora blob base */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+.aurora-blob-1 { animation: aurora1 18s ease-in-out infinite; }
+.aurora-blob-2 { animation: aurora2 24s ease-in-out infinite; }
+.aurora-blob-3 { animation: aurora3 20s ease-in-out infinite; }
+
+/* Wave container */
+.wave-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  overflow: hidden;
+  line-height: 0;
+  animation: waveFlow 12s linear infinite;
+}
+.wave-wrap-slow { animation-duration: 20s; }
+.wave-wrap-rev {
+  bottom: -2px;
+  animation-direction: reverse;
+  animation-duration: 16s;
+  opacity: 0.4;
+}
+
+/* Floating element */
+.float { animation: float 6s ease-in-out infinite; }
+.float-slow { animation: floatSlow 9s ease-in-out infinite; }
+
+/* Glow card */
+.glow-card {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Gradient animated border */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(109,40,217,0.1), rgba(139,92,246,0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Live dot */
+.live-dot {
+  animation: pulseGlow 2s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+}
+
+/* Shimmer loading */
+.shimmer {
+  background: linear-gradient(90deg, #0a0a0a 25%, #141414 37%, #0a0a0a 63%);
+  background-size: 1000px 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+/* Animated gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #a855f7, #7c3aed, #c084fc, #8b5cf6);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradRotate 4s ease infinite;
+}
+
+/* OLED glass card */
+.oled-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+}
+
+/* Neon text glow */
+.neon-purple {
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(168, 85, 247, 0.3);
+}
