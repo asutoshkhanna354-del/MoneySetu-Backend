@@ -132,40 +132,42 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { href: "/deposit",      icon: ArrowDownRight, label: "Deposit",     iconColor: "#60a5fa", bg: "rgba(59,130,246,0.12)"  },
-            { href: "/invest",       icon: Zap,            label: "Invest",      iconColor: "#a855f7", bg: "rgba(168,85,247,0.12)"  },
-            { href: "/withdraw",     icon: ArrowUpRight,   label: "Investments", iconColor: "#fb923c", bg: "rgba(249,115,22,0.12)"  },
-            { href: "/referral",     icon: Users,          label: "Refer",       iconColor: "#c084fc", bg: "rgba(192,132,252,0.12)" },
-            { href: "/transactions", icon: Activity,       label: "History",     iconColor: "#4ade80", bg: "rgba(74,222,128,0.12)"  },
-          ].map((a) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {([
+            { href: "/deposit",       icon: ArrowDownRight, label: "Add Money",  sub: "Instant deposit",    iconColor: "#60a5fa", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.2)"  },
+            { href: "/invest",        icon: Zap,            label: "Invest Now", sub: "Daily returns",      iconColor: "#a855f7", bg: "rgba(168,85,247,0.1)",  border: "rgba(168,85,247,0.2)"  },
+            { href: "/earn-withdraw", icon: ArrowUpRight,   label: "Withdraw",   sub: "Get your earnings",  iconColor: "#4ade80", bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.2)"  },
+            { href: "/referral",      icon: Users,          label: "Refer",      sub: "Earn commissions",   iconColor: "#c084fc", bg: "rgba(192,132,252,0.1)", border: "rgba(192,132,252,0.2)" },
+            { href: "/withdraw",      icon: Activity,       label: "My Plans",   sub: "Track investments",  iconColor: "#fb923c", bg: "rgba(249,115,22,0.1)",  border: "rgba(249,115,22,0.2)"  },
+          ] as const).map((a) => (
             <Link key={a.href} href={a.href}>
               <div
-                className="p-4 flex flex-col items-center justify-center space-y-2 cursor-pointer transition-all hover:-translate-y-1 rounded-2xl"
+                className="p-4 flex items-center gap-3 cursor-pointer transition-all hover:-translate-y-0.5 rounded-2xl"
                 style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
               >
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: a.bg, boxShadow: `0 0 16px ${a.bg}` }}>
-                  <a.icon className="w-6 h-6" style={{ color: a.iconColor }} />
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: a.bg, border: `1px solid ${a.border}` }}>
+                  <a.icon className="w-5 h-5" style={{ color: a.iconColor }} />
                 </div>
-                <span className="font-bold text-xs text-center" style={{ color: "var(--theme-t2)" }}>{a.label}</span>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm" style={{ color: "var(--theme-t1)" }}>{a.label}</p>
+                  <p className="text-[11px]" style={{ color: "var(--theme-t4)" }}>{a.sub}</p>
+                </div>
               </div>
             </Link>
           ))}
-          {/* Gift Code Button */}
+          {/* Gift Code */}
           <div
             onClick={() => { setGiftOpen(true); setGiftSuccess(null); setGiftCode(""); }}
-            className="p-4 flex flex-col items-center justify-center space-y-2 cursor-pointer transition-all hover:-translate-y-1 rounded-2xl"
+            className="p-4 flex items-center gap-3 cursor-pointer transition-all hover:-translate-y-0.5 rounded-2xl"
             style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
           >
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(234,179,8,0.12)", boxShadow: "0 0 16px rgba(234,179,8,0.12)" }}>
-              <Gift className="w-6 h-6" style={{ color: "#eab308" }} />
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.2)" }}>
+              <Gift className="w-5 h-5" style={{ color: "#eab308" }} />
             </div>
-            <span className="font-bold text-xs text-center" style={{ color: "var(--theme-t2)" }}>Gift Code</span>
+            <div>
+              <p className="font-bold text-sm" style={{ color: "var(--theme-t1)" }}>Gift Code</p>
+              <p className="text-[11px]" style={{ color: "var(--theme-t4)" }}>Redeem rewards</p>
+            </div>
           </div>
         </div>
 

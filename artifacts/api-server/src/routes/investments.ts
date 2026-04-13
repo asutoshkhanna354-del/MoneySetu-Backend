@@ -238,8 +238,12 @@ router.post("/investments/withdraw-earnings", requireAuth, async (req, res) => {
     const { amount, accountNo, ifsc, phone, accountName } = req.body;
 
     const withdrawAmt = parseFloat(amount);
-    if (!amount || isNaN(withdrawAmt) || withdrawAmt < 250) {
-      res.status(400).json({ error: "Minimum earnings withdrawal is ₹250" });
+    if (!amount || isNaN(withdrawAmt) || withdrawAmt <= 0) {
+      res.status(400).json({ error: "Please enter a valid withdrawal amount" });
+      return;
+    }
+    if (withdrawAmt > 10000) {
+      res.status(400).json({ error: "Maximum earnings withdrawal per request is ₹10,000" });
       return;
     }
 
@@ -252,8 +256,8 @@ router.post("/investments/withdraw-earnings", requireAuth, async (req, res) => {
 
     const totalEarned = activeInvs.reduce((sum, r) => sum + parseFloat(r.investment.totalEarned || "0"), 0);
 
-    if (totalEarned < 250) {
-      res.status(400).json({ error: "Insufficient earnings. You need at least ₹250 in earnings to withdraw." });
+    if (totalEarned <= 0) {
+      res.status(400).json({ error: "No earnings available to withdraw" });
       return;
     }
     if (withdrawAmt > totalEarned) {

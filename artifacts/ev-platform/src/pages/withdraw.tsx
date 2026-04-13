@@ -6,12 +6,11 @@ import { useState, useMemo } from "react";
 import { differenceInDays, differenceInHours, addDays, format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Wallet, CheckCircle2, Lock, Loader2, TrendingUp, Calendar,
-  Coins, ArrowUpRight, AlertCircle, ChevronDown, ChevronUp, CalendarClock,
-  Banknote, X,
+  Wallet, Lock, Loader2, TrendingUp, Calendar,
+  Coins, ArrowUpRight, AlertCircle, ChevronDown, ChevronUp, CalendarClock, CheckCircle2,
 } from "lucide-react";
-import { apiFetch } from "@/lib/apiFetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Link } from "wouter";
 
 const PLAN_COLORS: Record<string, { glow: string; badge: string; border: string; bg: string; text: string }> = {
   silver:   { glow: "rgba(148,163,184,0.3)", badge: "rgba(148,163,184,0.15)", border: "rgba(148,163,184,0.25)", bg: "rgba(148,163,184,0.06)", text: "#94a3b8" },
@@ -70,8 +69,8 @@ function PartialWithdrawForm({
   const earnedSoFar = parseFloat(inv.totalEarned) || inv.totalEarned || 0;
   const maxAmt = Math.min(10000, earnedSoFar);
   const isAboveMax = withdrawAmt > maxAmt;
-  const isBelowMin = withdrawAmt > 0 && withdrawAmt < 250;
-  const noEarnings = earnedSoFar < 250;
+  const isBelowMin = false;
+  const noEarnings = earnedSoFar <= 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,190 +221,6 @@ function PartialWithdrawForm({
   );
 }
 
-function EarningsWithdrawPanel({ totalEarned, onSuccess }: { totalEarned: number; onSuccess: () => void }) {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [accountNo, setAccountNo] = useState("");
-  const [ifsc, setIfsc] = useState("");
-  const [phone, setPhone] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const withdrawAmt = parseFloat(amount) || 0;
-  const isBelowMin = withdrawAmt > 0 && withdrawAmt < 250;
-  const isAboveMax = withdrawAmt > totalEarned;
-  const canSubmit = withdrawAmt >= 250 && !isAboveMax && accountNo && ifsc && phone && accountName;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("ev_token");
-      const res = await apiFetch("/api/investments/withdraw-earnings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount: withdrawAmt, accountNo, ifsc, phone, accountName }),
-      });
-      const data = await res.json();
-      if (!res.ok) { toast({ title: "Failed", description: data.error, variant: "destructive" }); return; }
-      setSuccess(true);
-      onSuccess();
-    } catch { toast({ title: "Network error", variant: "destructive" }); }
-    finally { setLoading(false); }
-  };
-
-  const quickAmounts = [500, 1000, 2000, 5000].filter(a => a <= totalEarned);
-  if (totalEarned > 0 && !quickAmounts.includes(totalEarned)) quickAmounts.push(Math.floor(totalEarned));
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(74,222,128,0.05)", border: "1px solid rgba(74,222,128,0.2)", boxShadow: "0 0 24px rgba(74,222,128,0.06)" }}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(74,222,128,0.15)" }}>
-            <Banknote className="w-5 h-5 text-emerald-400" />
-          </div>
-          <div>
-            <p className="font-black text-sm text-white">Withdraw Earnings</p>
-            <p className="text-[11px]" style={{ color: "rgba(74,222,128,0.7)" }}>
-              Available: <span className="font-black text-emerald-400">₹{totalEarned.toFixed(2)}</span>
-            </p>
-          </div>
-        </div>
-        {totalEarned >= 250 && !open && (
-          <button
-            onClick={() => { setOpen(true); setSuccess(false); setAmount(""); }}
-            className="px-4 py-2 rounded-xl text-xs font-black text-white transition-all hover:scale-105 active:scale-95"
-            style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)", boxShadow: "0 0 16px rgba(74,222,128,0.3)" }}
-          >
-            Withdraw
-          </button>
-        )}
-        {open && (
-          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--theme-card2)" }}>
-            <X className="w-4 h-4 text-white/50" />
-          </button>
-        )}
-      </div>
-
-      {/* Not enough earnings */}
-      {!open && totalEarned < 250 && (
-        <div className="px-5 pb-4">
-          <div className="rounded-xl p-3 text-center" style={{ background: "var(--theme-panel)" }}>
-            <p className="text-xs" style={{ color: "var(--theme-t3)" }}>
-              {totalEarned === 0
-                ? "Earnings will appear here after your first interest credit (24h)."
-                : `₹${(250 - totalEarned).toFixed(2)} more needed to reach ₹250 minimum.`}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Expanded form */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5">
-              <div className="h-px mb-4" style={{ background: "rgba(74,222,128,0.15)" }} />
-
-              {success ? (
-                <div className="text-center py-4 space-y-3">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto" style={{ background: "rgba(74,222,128,0.12)" }}>
-                    <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                  </div>
-                  <p className="font-black text-white">Withdrawal Submitted!</p>
-                  <p className="text-xs" style={{ color: "var(--theme-t3)" }}>₹{withdrawAmt.toFixed(2)} request sent. You'll receive payment within 24h.</p>
-                  <button onClick={() => { setOpen(false); setSuccess(false); }}
-                    className="px-6 py-2.5 rounded-xl font-bold text-sm text-white"
-                    style={{ background: "linear-gradient(135deg,#16a34a,#4ade80)" }}>
-                    Done
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Amount */}
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: "var(--theme-t3)" }}>
-                      Amount (₹250 – ₹{Math.floor(totalEarned).toLocaleString("en-IN")})
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-emerald-400 text-lg">₹</span>
-                      <input
-                        type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                        placeholder="0" min={250} max={totalEarned}
-                        className="w-full h-12 rounded-xl pl-8 pr-4 font-black text-lg text-white outline-none"
-                        style={{ background: "var(--theme-card2)", border: `1px solid ${isBelowMin || isAboveMax ? "rgba(239,68,68,0.4)" : "rgba(74,222,128,0.2)"}` }}
-                      />
-                    </div>
-                    {/* Quick amounts */}
-                    {quickAmounts.length > 0 && (
-                      <div className="flex gap-1.5 mt-2 flex-wrap">
-                        {quickAmounts.slice(0, 4).map(a => (
-                          <button key={a} type="button" onClick={() => setAmount(String(a))}
-                            className="flex-1 min-w-[60px] py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105"
-                            style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.15)", color: "#4ade80" }}>
-                            ₹{a >= 1000 ? `${(a/1000).toFixed(a%1000===0?0:1)}K` : a}
-                          </button>
-                        ))}
-                        <button type="button" onClick={() => setAmount(totalEarned.toFixed(2))}
-                          className="flex-1 min-w-[60px] py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105"
-                          style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80" }}>
-                          Max
-                        </button>
-                      </div>
-                    )}
-                    {isBelowMin && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />Minimum ₹250</p>}
-                    {isAboveMax && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />Exceeds available earnings</p>}
-                  </div>
-
-                  {/* Bank Details */}
-                  <div className="space-y-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--theme-t3)" }}>Bank Details</p>
-                    {[
-                      { label: "Account Number", value: accountNo, set: setAccountNo, placeholder: "e.g. 1234567890123456", type: "text" },
-                      { label: "IFSC Code", value: ifsc, set: (v: string) => setIfsc(v.toUpperCase()), placeholder: "e.g. SBIN0001234", type: "text" },
-                      { label: "Phone Number", value: phone, set: setPhone, placeholder: "10-digit mobile number", type: "tel" },
-                      { label: "Name on Account", value: accountName, set: setAccountName, placeholder: "As printed on passbook", type: "text" },
-                    ].map(f => (
-                      <div key={f.label}>
-                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1" style={{ color: "var(--theme-t4)" }}>{f.label} <span style={{ color: "#f87171" }}>*</span></label>
-                        <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
-                          className="w-full h-10 rounded-xl px-3 text-sm text-white outline-none"
-                          style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-border)" }} />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Info note */}
-                  <div className="rounded-xl p-3" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.1)" }}>
-                    <p className="text-[10px] leading-relaxed" style={{ color: "var(--theme-t3)" }}>
-                      • Only your daily earned returns are withdrawn — your principal stays fully invested<br />
-                      • Bank transfer processed within 24 hours of approval<br />
-                      • Your plans continue earning after this withdrawal
-                    </p>
-                  </div>
-
-                  <button type="submit" disabled={loading || !canSubmit}
-                    className="w-full py-3 rounded-xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
-                    style={{ background: canSubmit ? "linear-gradient(135deg,#16a34a,#4ade80)" : "rgba(255,255,255,0.06)", boxShadow: canSubmit ? "0 0 24px rgba(74,222,128,0.3)" : "none" }}>
-                    {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><Banknote className="w-4 h-4" />Withdraw ₹{withdrawAmt > 0 ? withdrawAmt.toFixed(2) : "0"}</>}
-                  </button>
-                </form>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 export default function Withdraw() {
   const { isDark } = useTheme();
   const { data: investments, isLoading } = useGetUserInvestments();
@@ -501,11 +316,24 @@ export default function Withdraw() {
               </div>
             </div>
 
-            {/* ── Earnings Withdrawal Section ── */}
-            <EarningsWithdrawPanel
-              totalEarned={totalEarnedFromActive}
-              onSuccess={refreshAll}
-            />
+            {/* ── Earnings Withdrawal CTA ── */}
+            <Link href="/earn-withdraw">
+              <div className="rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]"
+                style={{ background: "rgba(74,222,128,0.07)", border: "1px solid rgba(74,222,128,0.22)", boxShadow: "0 0 20px rgba(74,222,128,0.06)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(74,222,128,0.15)" }}>
+                    <Wallet className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-sm" style={{ color: "#4ade80" }}>Withdraw Earnings</p>
+                    <p className="text-[11px]" style={{ color: "var(--theme-t3)" }}>
+                      Available: <span className="font-bold text-emerald-400">₹{totalEarnedFromActive.toFixed(2)}</span>
+                    </p>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+              </div>
+            </Link>
           </>
         )}
 

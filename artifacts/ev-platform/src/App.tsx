@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import NotFound from "@/pages/not-found";
 
 import Landing from "./pages/landing";
@@ -16,6 +17,7 @@ import Deposit from "./pages/deposit";
 import AdminPanel from "./pages/admin/index";
 import ReferralPage from "./pages/referral";
 import Withdraw from "./pages/withdraw";
+import EarnWithdraw from "./pages/earn-withdraw";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +56,7 @@ function Router() {
       <Route path="/deposit"><ProtectedRoute component={Deposit} /></Route>
       <Route path="/referral"><ProtectedRoute component={ReferralPage} /></Route>
       <Route path="/withdraw"><ProtectedRoute component={Withdraw} /></Route>
+      <Route path="/earn-withdraw"><ProtectedRoute component={EarnWithdraw} /></Route>
       <Route path="/admin"><ProtectedRoute component={AdminPanel} /></Route>
 
       <Route component={NotFound} />
@@ -63,16 +66,18 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AuthProvider>
-            <Router />
-          </AuthProvider>
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AuthProvider>
+              <Router />
+            </AuthProvider>
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
