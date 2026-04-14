@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, ShieldCheck, X, CheckCircle2, ScanLine } from "lucide-react";
+import { Loader2, ShieldCheck, X, CheckCircle2, ScanLine, Send } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { QRCodeSVG } from "qrcode.react";
@@ -38,6 +38,9 @@ function PaymentQRModal({
   const [secondsLeft, setSecondsLeft] = useState(QR_TIMEOUT_SEC);
   const [paid, setPaid]               = useState(false);
   const [expired, setExpired]         = useState(false);
+  const [utrInput, setUtrInput]       = useState("");
+  const [utrSubmitting, setUtrSubmitting] = useState(false);
+  const [utrSubmitted, setUtrSubmitted]   = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const token    = localStorage.getItem("ev_token");
@@ -76,6 +79,29 @@ function PaymentQRModal({
     checkStatus();
     return stopAll;
   }, [checkStatus]);
+
+  const submitUtr = async () => {
+    const utr = utrInput.trim();
+    if (utr.length < 6) return;
+    setUtrSubmitting(true);
+    try {
+      const res = await apiFetch("/api/pay0/submit-utr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ orderId, utr }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUtrSubmitted(true);
+      } else {
+        alert(data.error || "Could not submit. Please try again.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setUtrSubmitting(false);
+    }
+  };
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
@@ -116,26 +142,68 @@ function PaymentQRModal({
           </div>
 
         ) : expired ? (
-          <div className="w-full rounded-2xl flex flex-col gap-3 p-5"
-            style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)" }}>
-            <p className="font-black text-center" style={{ color: "#f59e0b" }}>QR Expired</p>
-            <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-              <p className="text-xs font-bold mb-1" style={{ color: "#4ade80" }}>✓ Already paid?</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-                Your balance will be credited automatically once UPI confirms.
-              </p>
-            </div>
-            <div className="rounded-xl p-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)" }}>
-              <p className="text-xs font-bold mb-1" style={{ color: "#f87171" }}>✕ Didn't pay?</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-                No money was deducted. This request will cancel automatically.
-              </p>
-            </div>
-            <button onClick={onClose}
-              className="w-full py-2.5 rounded-xl font-bold text-sm"
-              style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
-              Close
-            </button>
+          <div className="w-full flex flex-col gap-3">
+            <p className="font-black text-center text-lg" style={{ color: "#f59e0b" }}>QR Expired</p>
+
+            {utrSubmitted ? (
+              <div className="rounded-2xl p-5 flex flex-col items-center gap-3"
+                style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                <CheckCircle2 className="w-10 h-10" style={{ color: "#22c55e" }} />
+                <p className="font-black text-white text-center">UTR Submitted!</p>
+                <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                  Admin will verify your payment and credit your balance within 30 minutes.
+                </p>
+                <button onClick={onClose} className="w-full py-2.5 rounded-xl font-bold text-sm mt-1"
+                  style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Already paid — submit UTR */}
+                <div className="rounded-2xl p-4 flex flex-col gap-3"
+                  style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)" }}>
+                  <p className="text-sm font-black" style={{ color: "#c4b5fd" }}>✅ Already paid?</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                    Enter your UPI Transaction ID (UTR) from your payment app. Admin will verify and credit your balance.
+                  </p>
+                  <input
+                    type="text"
+                    value={utrInput}
+                    onChange={e => setUtrInput(e.target.value)}
+                    placeholder="e.g. 504316819123"
+                    className="w-full rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(139,92,246,0.3)",
+                      color: "white",
+                    }}
+                  />
+                  <button
+                    onClick={submitUtr}
+                    disabled={utrSubmitting || utrInput.trim().length < 6}
+                    className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ background: "linear-gradient(135deg,#6d28d9,#a855f7)", color: "white" }}>
+                    {utrSubmitting
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
+                      : <><Send className="w-4 h-4" /> Submit UTR for Verification</>
+                    }
+                  </button>
+                </div>
+
+                {/* Didn't pay */}
+                <div className="rounded-xl p-3" style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: "#f87171" }}>✕ Didn't pay?</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+                    No money was deducted. This request will cancel automatically.
+                  </p>
+                </div>
+
+                <button onClick={onClose} className="text-xs text-center" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Close
+                </button>
+              </>
+            )}
           </div>
 
         ) : (

@@ -153,8 +153,8 @@ router.patch("/admin/transactions/:transactionId/approve", requireAdmin, async (
       res.status(404).json({ error: "Transaction not found" });
       return;
     }
-    if (tx.status !== "pending") {
-      res.status(400).json({ error: "Transaction is not pending" });
+    if (!["pending", "processing"].includes(tx.status)) {
+      res.status(400).json({ error: "Transaction cannot be approved (already resolved)" });
       return;
     }
 

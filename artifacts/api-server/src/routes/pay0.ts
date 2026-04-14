@@ -227,6 +227,52 @@ router.post("/pay0/webhook", async (req, res) => {
   }
 });
 
+// ── UTR submission (user proves they paid when gateway fails) ─────────────────
+// User submits their UPI Transaction Reference (UTR). We flip the transaction
+// status to "pending" so admin can see it, verify, and manually approve.
+router.post("/pay0/submit-utr", requireAuth, async (req, res) => {
+  try {
+    const { orderId, utr } = req.body;
+    if (!orderId || !utr || String(utr).trim().length < 6) {
+      res.status(400).json({ error: "Please provide a valid UTR number." });
+      return;
+    }
+
+    const [tx] = await db
+      .select()
+      .from(transactionsTable)
+      .where(like(transactionsTable.notes, `%pay0:${orderId}%`));
+
+    if (!tx || tx.userId !== req.user!.userId) {
+      res.status(404).json({ error: "Transaction not found." });
+      return;
+    }
+
+    if (tx.status === "approved") {
+      res.json({ success: true, message: "Your payment is already credited!" });
+      return;
+    }
+
+    if (tx.status === "rejected") {
+      res.status(400).json({ error: "This order was cancelled. Please contact support." });
+      return;
+    }
+
+    // Move to "pending" so admin can see + approve in their panel
+    await db.update(transactionsTable).set({
+      status: "pending",
+      notes:  `🔁 UTR submitted by user: ${String(utr).trim()} (Order: ${orderId})`,
+      updatedAt: new Date(),
+    }).where(eq(transactionsTable.id, tx.id));
+
+    console.log(`UTR submitted: tx#${tx.id} user#${tx.userId} ₹${tx.amount} UTR=${utr}`);
+    res.json({ success: true, message: "UTR submitted. Admin will verify and credit your balance within 30 minutes." });
+  } catch (err: any) {
+    console.error("submit-utr error:", err.message);
+    res.status(500).json({ error: "Server error. Please try again." });
+  }
+});
+
 export default router;
 
 // ── Pay0 stale-order cleanup cron ─────────────────────────────────────────────
