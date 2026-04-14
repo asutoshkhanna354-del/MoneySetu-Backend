@@ -363,14 +363,22 @@ function PaymentQRModal({
               <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#f59e0b" }} />
             </div>
             <p className="font-black text-base" style={{ color: "#f59e0b" }}>Payment Window Expired</p>
-            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-              If you already paid, <span style={{ color: "#fff", fontWeight: 700 }}>don't worry</span> — your balance will be credited automatically once the payment is confirmed by UPI.<br /><br />
-              Check your <span style={{ color: "#6C4CF1", fontWeight: 700 }}>Wallet</span> in a few minutes.
-            </p>
+            <div className="w-full rounded-xl p-3 text-left" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}>
+              <p className="text-xs font-bold mb-1" style={{ color: "#4ade80" }}>✓ Paid successfully?</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+                Your balance will be credited automatically. Check your Wallet in a few minutes.
+              </p>
+            </div>
+            <div className="w-full rounded-xl p-3 text-left" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+              <p className="text-xs font-bold mb-1" style={{ color: "#f87171" }}>✕ Didn't pay?</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+                No money was deducted. The pending transaction will be cancelled automatically. You can safely close this.
+              </p>
+            </div>
             <button onClick={onClose}
-              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm"
+              className="mt-1 px-6 py-2.5 rounded-xl font-bold text-sm"
               style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }}>
-              Close &amp; Check Wallet
+              Close
             </button>
           </div>
         ) : (
