@@ -16,8 +16,8 @@ const depositSchema = z.object({
 type DepositForm = z.infer<typeof depositSchema>;
 
 const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000, 10000];
-const QR_TIMEOUT_SEC = 300;
-const POLL_INTERVAL_MS = 4000;
+const QR_TIMEOUT_SEC = 900;
+const POLL_INTERVAL_MS = 2000;
 
 // ── Brand configs ─────────────────────────────────────────────────────────────
 type BrandConfig = {
@@ -249,6 +249,7 @@ function PaymentQRModal({
 }) {
   const [secondsLeft, setSecondsLeft] = useState(QR_TIMEOUT_SEC);
   const [paid, setPaid] = useState(false);
+  const [expired, setExpired] = useState(false);
   const [showUpiPicker, setShowUpiPicker] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -280,7 +281,8 @@ function PaymentQRModal({
         if (s <= 1) {
           if (pollRef.current) clearInterval(pollRef.current!);
           clearInterval(intervalRef.current!);
-          onClose();
+          // Don't auto-close — show "pending" screen instead of vanishing silently
+          setExpired(true);
           return 0;
         }
         return s - 1;
@@ -346,12 +348,30 @@ function PaymentQRModal({
             : "Scan QR with any UPI app"}
         </p>
 
-        {/* QR / Success */}
+        {/* QR / Success / Expired-pending */}
         {paid ? (
           <div className="w-full max-w-[260px] rounded-3xl flex flex-col items-center justify-center gap-3 py-12"
             style={{ background: "#fff" }}>
             <CheckCircle2 className="w-20 h-20" style={{ color: "#22c55e" }} />
             <p className="text-black font-black text-lg">Payment Received!</p>
+          </div>
+        ) : expired ? (
+          <div className="w-full rounded-3xl flex flex-col items-center justify-center gap-4 py-10 px-6 text-center"
+            style={{ background: "rgba(245,158,11,0.08)", border: "1.5px solid rgba(245,158,11,0.3)" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(245,158,11,0.15)" }}>
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#f59e0b" }} />
+            </div>
+            <p className="font-black text-base" style={{ color: "#f59e0b" }}>Payment Window Expired</p>
+            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+              If you already paid, <span style={{ color: "#fff", fontWeight: 700 }}>don't worry</span> — your balance will be credited automatically once the payment is confirmed by UPI.<br /><br />
+              Check your <span style={{ color: "#6C4CF1", fontWeight: 700 }}>Wallet</span> in a few minutes.
+            </p>
+            <button onClick={onClose}
+              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm"
+              style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }}>
+              Close &amp; Check Wallet
+            </button>
           </div>
         ) : (
           <div className="rounded-3xl p-4 flex items-center justify-center"
@@ -361,15 +381,15 @@ function PaymentQRModal({
         )}
 
         {/* Countdown */}
-        {!paid && (
+        {!paid && !expired && (
           <p className="text-sm font-semibold" style={{ color: "var(--theme-t2)" }}>
             Expires in{" "}
-            <span style={{ color: "#f59e0b", fontWeight: 800 }}>{mm}:{ss}</span>
+            <span style={{ color: secondsLeft < 60 ? "#ef4444" : "#f59e0b", fontWeight: 800 }}>{mm}:{ss}</span>
           </p>
         )}
 
         {/* Progress dots */}
-        {!paid && (
+        {!paid && !expired && (
           <div className="flex gap-1.5">
             {[0,1,2,3,4].map(i => (
               <div key={i} className="rounded-full" style={{
