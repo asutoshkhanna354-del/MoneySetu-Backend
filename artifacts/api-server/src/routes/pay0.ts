@@ -42,8 +42,8 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
     const { amount } = req.body;
     const amountNum = parseFloat(amount);
 
-    if (!amountNum || amountNum < 100) {
-      res.status(400).json({ error: "Minimum deposit is ₹100" });
+    if (!amountNum || amountNum < 1) {
+      res.status(400).json({ error: "Minimum deposit is ₹1" });
       return;
     }
 

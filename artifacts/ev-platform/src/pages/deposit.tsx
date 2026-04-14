@@ -11,7 +11,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { QRCodeSVG } from "qrcode.react";
 
 const depositSchema = z.object({
-  amount: z.coerce.number().min(100, "Minimum deposit is ₹100").max(10000, "Maximum ₹10,000 per transaction"),
+  amount: z.coerce.number().min(1, "Minimum deposit is ₹1").max(10000, "Maximum ₹10,000 per transaction"),
 });
 type DepositForm = z.infer<typeof depositSchema>;
 
