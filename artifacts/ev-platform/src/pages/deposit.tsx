@@ -550,14 +550,6 @@ export default function Deposit() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [loadingMethod, setLoadingMethod] = useState<string | null>(null);
-  const [activeModal, setActiveModal] = useState<{
-    methodId: string;
-    paymentUrl: string;
-    upiLink: string | null;
-    qrContent: string;
-    orderId: string;
-    amount: number;
-  } | null>(null);
 
   const form = useForm<DepositForm>({
     resolver: zodResolver(depositSchema),
@@ -567,8 +559,11 @@ export default function Deposit() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("pay0") === "success") {
-      toast({ title: "Payment Successful!", description: "Your deposit is being confirmed." });
       window.history.replaceState({}, "", "/deposit");
+      toast({
+        title: "Payment Submitted ✓",
+        description: "Your balance will be credited once UPI confirms the payment. Check your wallet in a moment.",
+      });
       setLocation("/transactions");
     }
   }, []);
@@ -599,14 +594,8 @@ export default function Deposit() {
         return;
       }
 
-      setActiveModal({
-        methodId,
-        paymentUrl: data.payment_url,
-        upiLink: data.upi_link ?? null,
-        qrContent: data.qr_content ?? data.payment_url,
-        orderId: data.order_id,
-        amount: amt,
-      });
+      // Open Pay0's official payment page directly
+      window.location.href = data.payment_url;
     } catch {
       toast({
         title: "High Traffic — Please Try Again",
@@ -618,27 +607,8 @@ export default function Deposit() {
     }
   };
 
-  const handleSuccess = () => {
-    setActiveModal(null);
-    toast({ title: "Payment Successful! 🎉", description: "Your balance has been credited." });
-    setLocation("/transactions");
-  };
-
   return (
     <AppLayout>
-      {activeModal && (
-        <PaymentQRModal
-          brand={BRANDS[activeModal.methodId] || BRANDS.upi}
-          methodId={activeModal.methodId}
-          paymentUrl={activeModal.paymentUrl}
-          upiLink={activeModal.upiLink}
-          qrContent={activeModal.qrContent}
-          orderId={activeModal.orderId}
-          amount={activeModal.amount}
-          onClose={() => setActiveModal(null)}
-          onSuccess={handleSuccess}
-        />
-      )}
 
       <div className="space-y-5 pb-8 max-w-md mx-auto">
         {/* Header */}
