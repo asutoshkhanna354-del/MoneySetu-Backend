@@ -8,6 +8,11 @@ import { applyReferralCommissions } from "../lib/referrals.js";
 const PAY0_API_KEY = process.env.PAY0_API_KEY || "84b95c685a4576f1a6ac1a07b44d4a0f";
 const PAY0_SECRET  = process.env.PAY0_SECRET  || "I4tGlqvPjx395748364";
 
+// The public Render backend URL — used for webhook registration with Pay0
+const BACKEND_URL = process.env.BACKEND_URL || "https://moneysetu-backend.onrender.com";
+// The public Netlify frontend URL — used for post-payment redirect
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://moneysetu.netlify.app";
+
 // Pay0 only returns a web URL. We fetch their payment page once to extract
 // the merchant UPI VPA (pa=...) and cache it for all future orders.
 let cachedVpa: string | null = null;
@@ -52,13 +57,13 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
     // Unique order ID
     const orderId = `ms${Date.now()}${req.user!.userId}`;
 
-    // After Pay0 payment, redirect back to app
-    const origin = req.headers.origin
-      || (req.headers.host ? `${req.protocol}://${req.headers.host}` : "");
-    const redirectUrl = `${origin}/deposit?pay0=success&oid=${orderId}`;
+    // Redirect user back to app after Pay0 payment screen
+    const redirectUrl = `${FRONTEND_URL}/deposit?pay0=success&oid=${orderId}`;
 
-    // Create transaction as "processing" — bypasses admin review.
-    // Webhook auto-approves (credits balance) or rejects based on Pay0 response.
+    // Webhook URL — Pay0 POSTs payment result here
+    const webhookUrl = `${BACKEND_URL}/api/pay0/webhook`;
+
+    // Create transaction as "processing"
     await db.insert(transactionsTable).values({
       userId: req.user!.userId,
       type: "deposit",
@@ -68,7 +73,7 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
       notes: `pay0:${orderId}`,
     });
 
-    // Call Pay0 API
+    // Call Pay0 API — include webhook/notify URL so Pay0 can POST back on success
     const params = new URLSearchParams({
       customer_mobile: user.phone || "9999999999",
       customer_name:   user.name  || "Customer",
@@ -76,6 +81,9 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
       amount:          Math.round(amountNum).toString(),
       order_id:        orderId,
       redirect_url:    redirectUrl,
+      webhook_url:     webhookUrl,
+      notify_url:      webhookUrl,
+      callback_url:    webhookUrl,
       remark1:         "MoneySetu Deposit",
       remark2:         `uid${user.id}`,
     });
@@ -115,6 +123,7 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
 
     const qrContent = upiLink || paymentUrl;
 
+    console.log(`Pay0 order created: ${orderId} ₹${amountNum} webhook→${webhookUrl}`);
     res.json({ payment_url: paymentUrl, upi_link: upiLink, qr_content: qrContent, order_id: orderId });
   } catch (err: any) {
     console.error("Pay0 create-order error:", err.message);
@@ -176,7 +185,7 @@ router.post("/pay0/webhook", async (req, res) => {
     }
 
     // Pay0 webhook status field: "SUCCESS" for success, anything else = failed
-    const isSuccess = String(status || "").toUpperCase() === "SUCCESS";
+    const isSuccess = ["SUCCESS", "PAID", "COMPLETED"].includes(String(status || "").toUpperCase());
 
     if (isSuccess) {
       await db
@@ -221,11 +230,14 @@ router.post("/pay0/webhook", async (req, res) => {
 export default router;
 
 // ── Pay0 stale-order cleanup cron ─────────────────────────────────────────────
-// Runs every 2 minutes. Any "processing" Pay0 deposit older than 6 minutes is
-// checked via the Pay0 status API; if not SUCCESS it gets marked rejected.
+// Runs every 5 minutes. Any "processing" Pay0 deposit older than 20 minutes is
+// checked via the Pay0 status API.
+// IMPORTANT: if the status API is unreachable we do NOT cancel — we only cancel
+// when Pay0 explicitly tells us the order failed/expired, or after a 60-min hard limit.
 export async function startPay0StatusChecker() {
-  const CHECK_INTERVAL_MS = 2 * 60 * 1000;   // every 2 min
-  const STALE_AFTER_MS    = 6 * 60 * 1000;   // 6 min timeout
+  const CHECK_INTERVAL_MS  = 5  * 60 * 1000;   // check every 5 min
+  const STALE_AFTER_MS     = 20 * 60 * 1000;   // start checking after 20 min
+  const HARD_CANCEL_MS     = 60 * 60 * 1000;   // hard-cancel after 60 min regardless
 
   async function checkStaleOrders() {
     try {
@@ -243,8 +255,21 @@ export async function startPay0StatusChecker() {
         );
 
       for (const tx of stale) {
-        const orderId = (tx.notes || "").replace("pay0:", "").trim();
-        let resolved = false;
+        const match = (tx.notes || "").match(/pay0:(\S+)/);
+        if (!match) continue;
+        const orderId = match[1];
+
+        // Hard-cancel: order is older than 60 minutes — credit never arrived
+        const ageMs = Date.now() - new Date(tx.createdAt!).getTime();
+        if (ageMs > HARD_CANCEL_MS) {
+          await db.update(transactionsTable).set({
+            status: "rejected",
+            notes: `❌ Payment expired (Order: ${orderId})`,
+            updatedAt: new Date(),
+          }).where(eq(transactionsTable.id, tx.id));
+          console.log(`❌ Pay0 cron hard-expired tx#${tx.id} (${orderId}) after 60 min`);
+          continue;
+        }
 
         // Try Pay0 check-order-status API
         try {
@@ -256,18 +281,20 @@ export async function startPay0StatusChecker() {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString(),
+            signal: AbortSignal.timeout(8000),
           });
           const raw = await resp.text();
           let data: any = {};
           try { data = JSON.parse(raw); } catch { /* ignore */ }
 
           const apiStatus = String(data?.result?.status || data?.status || "").toUpperCase();
+          console.log(`Pay0 cron check tx#${tx.id} (${orderId}): apiStatus=${apiStatus}`);
 
-          if (apiStatus === "SUCCESS") {
-            // Approve: credit user balance
+          if (["SUCCESS", "PAID", "COMPLETED"].includes(apiStatus)) {
+            // Approve and credit balance
             await db.update(transactionsTable).set({
               status: "approved",
-              notes: `✅ UPI payment confirmed via Pay0 (Order: ${orderId})`,
+              notes: `✅ UPI payment confirmed via status check (Order: ${orderId})`,
               updatedAt: new Date(),
             }).where(eq(transactionsTable.id, tx.id));
 
@@ -278,27 +305,23 @@ export async function startPay0StatusChecker() {
               }).where(eq(usersTable.id, tx.userId));
               await applyReferralCommissions(tx.userId, parseFloat(tx.amount));
             }
-            console.log(`✅ Pay0 cron approved stale tx#${tx.id} ₹${tx.amount}`);
-            resolved = true;
-          } else if (apiStatus && apiStatus !== "PENDING" && apiStatus !== "PROCESSING") {
-            resolved = true; // fall through to reject
-          }
-        } catch {
-          // Pay0 API unreachable — still cancel after timeout
-          resolved = true;
-        }
+            console.log(`✅ Pay0 cron approved tx#${tx.id} ₹${tx.amount}`);
 
-        if (resolved) {
-          // If not already set to approved above, reject it
-          const [current] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, tx.id));
-          if (current?.status === "processing") {
+          } else if (apiStatus && !["PENDING", "PROCESSING", "CREATED", ""].includes(apiStatus)) {
+            // Pay0 explicitly returned a failure status — cancel it
             await db.update(transactionsTable).set({
               status: "rejected",
-              notes: `❌ Payment cancelled or expired (Order: ${orderId})`,
+              notes: `❌ Payment failed (Order: ${orderId}, Status: ${apiStatus})`,
               updatedAt: new Date(),
             }).where(eq(transactionsTable.id, tx.id));
-            console.log(`❌ Pay0 cron cancelled stale tx#${tx.id} (${orderId})`);
+            console.log(`❌ Pay0 cron rejected tx#${tx.id} status=${apiStatus}`);
           }
+          // If PENDING/PROCESSING/CREATED or empty — leave as "processing", check again next cycle
+
+        } catch (e: any) {
+          // Pay0 API unreachable (Render cold start, network blip, timeout)
+          // DO NOT cancel — leave as "processing" and check again next cycle
+          console.warn(`Pay0 cron: status check failed for tx#${tx.id} (${orderId}): ${e.message} — skipping this cycle`);
         }
       }
     } catch (err: any) {
@@ -306,7 +329,6 @@ export async function startPay0StatusChecker() {
     }
   }
 
-  // Run periodically
   setInterval(checkStaleOrders, CHECK_INTERVAL_MS);
-  console.log("Pay0 stale-order cleanup cron started (runs every 10 min, cancels after 20 min)");
+  console.log("Pay0 stale-order cleanup cron started (checks every 5 min, hard-expires after 60 min)");
 }
