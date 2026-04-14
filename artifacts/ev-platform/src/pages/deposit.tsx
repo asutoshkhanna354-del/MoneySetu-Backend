@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, ShieldCheck, X, CheckCircle2, ScanLine, Send } from "lucide-react";
+import { Loader2, ShieldCheck, X, CheckCircle2, Send } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { QRCodeSVG } from "qrcode.react";
@@ -16,11 +16,79 @@ const depositSchema = z.object({
 type DepositForm = z.infer<typeof depositSchema>;
 
 const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000, 10000];
-const QR_TIMEOUT_SEC = 300; // 5 minutes
+const QR_TIMEOUT_SEC = 300;
 const POLL_MS = 2000;
 
-// ── QR Payment Modal ────────────────────────────────────────────────────────────
+// ── Brand configs ──────────────────────────────────────────────────────────────
+type Brand = {
+  name: string;
+  accent: string;
+  appScheme: ((params: string) => string) | null;
+  logo: React.ReactNode;
+  pillStyle: React.CSSProperties;
+};
+
+const BRANDS: Record<string, Brand> = {
+  gpay: {
+    name: "Pay",
+    accent: "#4285F4",
+    appScheme: (p) => `tez://upi/pay?${p}`,
+    logo: (
+      <svg width="32" height="32" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+    ),
+    pillStyle: { background: "#000000", color: "#ffffff" },
+  },
+  phonepe: {
+    name: "PhonePe",
+    accent: "#5f259f",
+    appScheme: (p) => `phonepe://pay?${p}`,
+    logo: <img src="/logos/phonepe.svg" alt="PhonePe" style={{ width: 32, height: 32 }} />,
+    pillStyle: { background: "#f5f3ff", color: "#5f259f" },
+  },
+  paytm: {
+    name: "Paytm",
+    accent: "#00BAF2",
+    appScheme: (p) => `paytmmp://pay?${p}`,
+    logo: <img src="/logos/paytm_logo.png" alt="Paytm" style={{ height: 26, width: "auto", objectFit: "contain" }} />,
+    pillStyle: { background: "#ffffff", color: "#00BAF2" },
+  },
+  upi: {
+    name: "Any UPI App",
+    accent: "#097939",
+    appScheme: (p) => `upi://pay?${p}`,
+    logo: <img src="/logos/upi.svg" alt="UPI" style={{ height: 28, width: "auto" }} />,
+    pillStyle: { background: "#ffffff", color: "#111111" },
+  },
+  netbanking: {
+    name: "Net Banking",
+    accent: "#2563eb",
+    appScheme: null,
+    logo: (
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+        style={{ background: "linear-gradient(135deg,#1e3a5f,#2563eb)" }}>
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path d="M4 20h40v4H4z" fill="white" opacity="0.5"/>
+          <rect x="6" y="24" width="36" height="16" rx="2" fill="white" opacity="0.9"/>
+          <rect x="10" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+          <rect x="20" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+          <rect x="30" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+          <path d="M24 8l20 12H4z" fill="white"/>
+        </svg>
+      </div>
+    ),
+    pillStyle: { background: "linear-gradient(135deg,#1e3a8a,#2563eb)", color: "#ffffff" },
+  },
+};
+
+// ── Payment QR Modal ────────────────────────────────────────────────────────────
 function PaymentQRModal({
+  brand,
+  brandKey,
   qrContent,
   upiLink,
   orderId,
@@ -28,6 +96,8 @@ function PaymentQRModal({
   onClose,
   onSuccess,
 }: {
+  brand: Brand;
+  brandKey: string;
   qrContent: string;
   upiLink: string | null;
   orderId: string;
@@ -36,9 +106,9 @@ function PaymentQRModal({
   onSuccess: () => void;
 }) {
   const [secondsLeft, setSecondsLeft] = useState(QR_TIMEOUT_SEC);
-  const [paid, setPaid]               = useState(false);
-  const [expired, setExpired]         = useState(false);
-  const [utrInput, setUtrInput]       = useState("");
+  const [paid, setPaid]                   = useState(false);
+  const [expired, setExpired]             = useState(false);
+  const [utrInput, setUtrInput]           = useState("");
   const [utrSubmitting, setUtrSubmitting] = useState(false);
   const [utrSubmitted, setUtrSubmitted]   = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -57,14 +127,8 @@ function PaymentQRModal({
       });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.status === "approved") {
-        stopAll();
-        setPaid(true);
-        setTimeout(onSuccess, 1600);
-      } else if (data.status === "rejected") {
-        stopAll();
-        onClose();
-      }
+      if (data.status === "approved") { stopAll(); setPaid(true); setTimeout(onSuccess, 1600); }
+      else if (data.status === "rejected") { stopAll(); onClose(); }
     } catch { /* retry next cycle */ }
   }, [orderId, token, onSuccess, onClose]);
 
@@ -91,24 +155,21 @@ function PaymentQRModal({
         body: JSON.stringify({ orderId, utr }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setUtrSubmitted(true);
-      } else {
-        alert(data.error || "Could not submit. Please try again.");
-      }
-    } catch {
-      alert("Network error. Please try again.");
-    } finally {
-      setUtrSubmitting(false);
-    }
+      if (res.ok && data.success) setUtrSubmitted(true);
+      else alert(data.error || "Could not submit. Please try again.");
+    } catch { alert("Network error. Please try again."); }
+    finally { setUtrSubmitting(false); }
   };
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
 
+  const appLink = upiLink && brand.appScheme
+    ? brand.appScheme(upiLink.replace(/^upi:\/\/[^?]*\?/, ""))
+    : upiLink;
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto" style={{ background: "#000" }}>
-      {/* Close button */}
       <button onClick={onClose}
         className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center"
         style={{ background: "rgba(239,68,68,0.85)" }}>
@@ -117,20 +178,25 @@ function PaymentQRModal({
 
       <div className="flex flex-col items-center w-full max-w-sm mx-auto px-5 pt-10 pb-10 gap-5">
 
-        {/* Amount header */}
-        <div className="w-full rounded-2xl p-4 flex items-center justify-between"
-          style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)" }}>
-          <div>
-            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>Paying</p>
-            <p className="text-2xl font-black text-white">₹{amount.toLocaleString("en-IN")}</p>
+        {/* Header */}
+        <div className="w-full rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: `${brand.accent}15`, border: `1px solid ${brand.accent}35` }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.08)" }}>
+            {brand.logo}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <p className="text-xs font-semibold" style={{ color: "#4ade80" }}>Secure UPI</p>
+          <div className="flex-1">
+            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>Pay via</p>
+            <p className="text-base font-black text-white">{brand.name}</p>
+            <p className="text-xs font-semibold" style={{ color: "#4ade80" }}>✓ Secure UPI Payment</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>Amount</p>
+            <p className="text-lg font-black text-white">₹{amount.toLocaleString("en-IN")}</p>
           </div>
         </div>
 
-        {/* Main content */}
+        {/* States */}
         {paid ? (
           <div className="flex flex-col items-center gap-4 py-10">
             <div className="w-24 h-24 rounded-full flex items-center justify-center"
@@ -151,7 +217,7 @@ function PaymentQRModal({
                 <CheckCircle2 className="w-10 h-10" style={{ color: "#22c55e" }} />
                 <p className="font-black text-white text-center">UTR Submitted!</p>
                 <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                  Admin will verify your payment and credit your balance within 30 minutes.
+                  Admin will verify and credit your balance within 30 minutes.
                 </p>
                 <button onClick={onClose} className="w-full py-2.5 rounded-xl font-bold text-sm mt-1"
                   style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)" }}>
@@ -160,7 +226,6 @@ function PaymentQRModal({
               </div>
             ) : (
               <>
-                {/* Already paid — submit UTR */}
                 <div className="rounded-2xl p-4 flex flex-col gap-3"
                   style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)" }}>
                   <p className="text-sm font-black" style={{ color: "#c4b5fd" }}>✅ Already paid?</p>
@@ -173,98 +238,68 @@ function PaymentQRModal({
                     onChange={e => setUtrInput(e.target.value)}
                     placeholder="e.g. 504316819123"
                     className="w-full rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(139,92,246,0.3)",
-                      color: "white",
-                    }}
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(139,92,246,0.3)", color: "white" }}
                   />
-                  <button
-                    onClick={submitUtr}
-                    disabled={utrSubmitting || utrInput.trim().length < 6}
+                  <button onClick={submitUtr} disabled={utrSubmitting || utrInput.trim().length < 6}
                     className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                     style={{ background: "linear-gradient(135deg,#6d28d9,#a855f7)", color: "white" }}>
                     {utrSubmitting
-                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
-                      : <><Send className="w-4 h-4" /> Submit UTR for Verification</>
-                    }
+                      ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</>
+                      : <><Send className="w-4 h-4" />Submit UTR for Verification</>}
                   </button>
                 </div>
 
-                {/* Didn't pay */}
                 <div className="rounded-xl p-3" style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)" }}>
                   <p className="text-xs font-bold mb-1" style={{ color: "#f87171" }}>✕ Didn't pay?</p>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
                     No money was deducted. This request will cancel automatically.
                   </p>
                 </div>
-
-                <button onClick={onClose} className="text-xs text-center" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  Close
-                </button>
+                <button onClick={onClose} className="text-xs text-center" style={{ color: "rgba(255,255,255,0.3)" }}>Close</button>
               </>
             )}
           </div>
 
         ) : (
           <>
-            {/* Instruction */}
-            <div className="w-full rounded-xl px-4 py-3 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              {upiLink ? (
-                <>
-                  <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
-                    📱 On mobile — tap <b>Open in UPI App</b> below
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    On desktop — scan QR with any UPI app
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
-                    📱 Scan QR with your phone camera to pay
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Complete the payment on the page that opens
-                  </p>
-                </>
-              )}
-            </div>
+            <p className="text-sm font-semibold text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
+              {upiLink
+                ? `Scan with any UPI app or tap Open in ${brand.name}`
+                : "Scan the QR with your phone camera to pay"}
+            </p>
 
-            {/* QR Code */}
-            <div className="rounded-3xl p-5 flex items-center justify-center"
-              style={{ background: "#fff", boxShadow: "0 0 48px rgba(139,92,246,0.45)" }}>
-              <QRCodeSVG value={qrContent} size={230} bgColor="#ffffff" fgColor="#000000" level="M" marginSize={0} />
+            {/* QR */}
+            <div className="rounded-3xl p-4 flex items-center justify-center"
+              style={{ background: "#fff", boxShadow: `0 0 40px ${brand.accent}55` }}>
+              <QRCodeSVG value={qrContent} size={220} bgColor="#ffffff" fgColor="#000000" level="M" marginSize={0} />
             </div>
 
             {/* Timer */}
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>Expires in</p>
-              <p className="text-2xl font-black tabular-nums" style={{ color: secondsLeft < 60 ? "#ef4444" : "#f59e0b" }}>
+            <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Expires in{" "}
+              <span style={{ color: secondsLeft < 60 ? "#ef4444" : "#f59e0b", fontWeight: 800 }}>
                 {mm}:{ss}
-              </p>
-            </div>
-
-            {/* Scanning indicator */}
-            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
-              style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}>
-              <ScanLine className="w-4 h-4 animate-pulse" style={{ color: "#a855f7" }} />
-              <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Waiting for payment confirmation…
               </span>
+            </p>
+
+            {/* Animated dots */}
+            <div className="flex gap-1.5">
+              {[0,1,2,3,4].map(i => (
+                <div key={i} className="rounded-full" style={{
+                  width: i === 2 ? 20 : 8, height: 8,
+                  background: i === 2 ? brand.accent : "rgba(255,255,255,0.12)",
+                  transition: "all 0.3s",
+                }} />
+              ))}
             </div>
 
-            {/* Tap to Pay button (mobile) */}
-            {upiLink && (
-              <a href={upiLink} target="_blank" rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 rounded-2xl py-4 transition-all active:scale-[0.98]"
-                style={{
-                  background: "linear-gradient(135deg,#6d28d9,#a855f7)",
-                  textDecoration: "none",
-                  boxShadow: "0 4px 20px rgba(139,92,246,0.4)",
-                }}>
-                <span className="font-bold text-white text-base">Open in UPI App</span>
+            {/* Open in App (mobile deep link) */}
+            {appLink && (
+              <a href={appLink} target="_blank" rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 transition-all active:scale-[0.98] hover:opacity-90"
+                style={{ background: brand.accent, textDecoration: "none", boxShadow: `0 4px 20px ${brand.accent}50` }}>
+                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">{brand.logo}</div>
+                <span className="font-bold text-white text-base">Open in {brand.name}</span>
               </a>
             )}
 
@@ -278,13 +313,40 @@ function PaymentQRModal({
   );
 }
 
+// ── Branded pill button ─────────────────────────────────────────────────────────
+function MethodCard({
+  brandKey, brand, loading, disabled, onClick,
+}: {
+  brandKey: string; brand: Brand; loading: boolean; disabled: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full flex items-center justify-center gap-3 rounded-2xl transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{ ...brand.pillStyle, height: 64, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
+      {loading ? (
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: (brand.pillStyle.color as string) }} />
+      ) : (
+        <>
+          <span className="flex items-center justify-center">{brand.logo}</span>
+          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: 0.2, color: (brand.pillStyle.color as string) }}>
+            {brand.name}
+          </span>
+        </>
+      )}
+    </button>
+  );
+}
+
 // ── Main Deposit Page ───────────────────────────────────────────────────────────
 export default function Deposit() {
   const { isDark } = useTheme();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [paying, setPaying] = useState(false);
+  const [loadingMethod, setLoadingMethod] = useState<string | null>(null);
   const [modal, setModal] = useState<{
+    brandKey: string;
     qrContent: string;
     upiLink: string | null;
     orderId: string;
@@ -300,19 +362,16 @@ export default function Deposit() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("pay0") === "success") {
       window.history.replaceState({}, "", "/deposit");
-      toast({
-        title: "Payment Submitted ✓",
-        description: "Your balance will be credited once UPI confirms.",
-      });
+      toast({ title: "Payment Submitted ✓", description: "Your balance will be credited once UPI confirms." });
       setLocation("/transactions");
     }
   }, []);
 
-  const handlePay = async () => {
+  const handlePay = async (brandKey: string) => {
     const valid = await form.trigger("amount");
     if (!valid) return;
     const amt = form.getValues("amount");
-    setPaying(true);
+    setLoadingMethod(brandKey);
     try {
       const token = localStorage.getItem("ev_token");
       const res = await apiFetch("/api/pay0/create-order", {
@@ -325,16 +384,11 @@ export default function Deposit() {
         toast({ title: "Try Again", description: data.error || "Could not create payment. Please retry.", variant: "destructive" });
         return;
       }
-      setModal({
-        qrContent: data.qr_content || data.payment_url,
-        upiLink:   data.upi_link ?? null,
-        orderId:   data.order_id,
-        amount:    amt,
-      });
+      setModal({ brandKey, qrContent: data.qr_content || data.payment_url, upiLink: data.upi_link ?? null, orderId: data.order_id, amount: amt });
     } catch {
       toast({ title: "Network Error", description: "Please check your connection and try again.", variant: "destructive" });
     } finally {
-      setPaying(false);
+      setLoadingMethod(null);
     }
   };
 
@@ -348,6 +402,8 @@ export default function Deposit() {
     <AppLayout>
       {modal && (
         <PaymentQRModal
+          brand={BRANDS[modal.brandKey] || BRANDS.upi}
+          brandKey={modal.brandKey}
           qrContent={modal.qrContent}
           upiLink={modal.upiLink}
           orderId={modal.orderId}
@@ -425,21 +481,22 @@ export default function Deposit() {
           </div>
         </div>
 
-        {/* Single Pay button */}
-        <button
-          onClick={handlePay}
-          disabled={paying}
-          className="w-full h-16 rounded-2xl font-black text-lg text-white flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{
-            background: "linear-gradient(135deg,#6d28d9,#a855f7)",
-            boxShadow: "0 4px 24px rgba(139,92,246,0.45)",
-          }}>
-          {paying ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Generating QR…</>
-          ) : (
-            <><ScanLine className="w-5 h-5" /> Proceed to Pay</>
-          )}
-        </button>
+        {/* Payment method buttons */}
+        <div className="space-y-2">
+          <p className="text-xs font-black uppercase tracking-widest px-1" style={{ color: "var(--theme-t3)" }}>
+            Choose Payment Method
+          </p>
+          {Object.entries(BRANDS).map(([key, brand]) => (
+            <MethodCard
+              key={key}
+              brandKey={key}
+              brand={brand}
+              loading={loadingMethod === key}
+              disabled={loadingMethod !== null}
+              onClick={() => handlePay(key)}
+            />
+          ))}
+        </div>
 
         {/* Trust badges */}
         <div className="flex items-center justify-center gap-6 pt-1">
