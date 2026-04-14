@@ -211,12 +211,25 @@ function PaymentQRModal({
             {/* Instruction */}
             <div className="w-full rounded-xl px-4 py-3 text-center"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
-                📱 On mobile — tap the button below to pay
-              </p>
-              <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                On desktop — scan QR with your phone camera
-              </p>
+              {upiLink ? (
+                <>
+                  <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    📱 On mobile — tap <b>Open in UPI App</b> below
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    On desktop — scan QR with any UPI app
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    📱 Scan QR with your phone camera to pay
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Complete the payment on the page that opens
+                  </p>
+                </>
+              )}
             </div>
 
             {/* QR Code */}
@@ -251,7 +264,7 @@ function PaymentQRModal({
                   textDecoration: "none",
                   boxShadow: "0 4px 20px rgba(139,92,246,0.4)",
                 }}>
-                <span className="font-bold text-white text-base">Tap to Pay</span>
+                <span className="font-bold text-white text-base">Open in UPI App</span>
               </a>
             )}
 

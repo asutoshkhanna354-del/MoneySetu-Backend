@@ -10,6 +10,30 @@ const PAY0_SECRET  = process.env.PAY0_SECRET  || "I4tGlqvPjx395748364";
 const BACKEND_URL  = process.env.BACKEND_URL  || "https://moneysetu-backend.onrender.com";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://moneysetu.netlify.app";
 
+// Fetch the UPI VPA from a specific Pay0 order's payment page.
+// NO caching — every order gets its own unique VPA from Pay0.
+async function fetchOrderVpa(paymentUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(paymentUrl, { signal: AbortSignal.timeout(8000) });
+    const html = await res.text();
+    // Try pa= in UPI link first, then data-vpa attribute, then JSON blob
+    const match =
+      html.match(/[?&]pa=([^&"'<>\s]+)/) ||
+      html.match(/data-vpa=["']([^"']+)["']/) ||
+      html.match(/"vpa"\s*:\s*"([^"]+)"/) ||
+      html.match(/"pa"\s*:\s*"([^"]+)"/);
+    if (match?.[1]) {
+      const vpa = decodeURIComponent(match[1]);
+      console.log(`Pay0 order VPA scraped: ${vpa} from ${paymentUrl}`);
+      return vpa;
+    }
+    console.warn("Pay0: could not extract VPA from payment page:", paymentUrl);
+  } catch (e: any) {
+    console.warn("Pay0: failed to fetch payment page for VPA:", e.message);
+  }
+  return null;
+}
+
 const router = Router();
 
 // ── Helper: credit a transaction and update user balance ──────────────────────
@@ -117,15 +141,22 @@ router.post("/pay0/create-order", requireAuth, async (req, res) => {
       return;
     }
 
-    // CRITICAL FIX: Use Pay0's own payment URL as the QR content.
-    // Do NOT try to extract/cache VPAs — Pay0 uses per-order dynamic VPAs.
-    // When user scans this QR → Pay0's page opens → user pays → Pay0 sends webhook.
-    // This is the ONLY reliable way to ensure Pay0 can track and confirm the payment.
-    console.log(`Pay0 order created: ${orderId} ₹${amountNum} webhook→${webhookUrl}`);
+    // Fetch this order's unique VPA from Pay0's payment page (NO caching).
+    // Each Pay0 order has its own tracking VPA — using the wrong one means
+    // Pay0 never sees the payment and the webhook never fires.
+    const vpa = await fetchOrderVpa(paymentUrl);
+    const upiLink = vpa
+      ? `upi://pay?pa=${encodeURIComponent(vpa)}&pn=MoneySetu&am=${Math.round(amountNum)}&cu=INR&tn=Deposit&tr=${orderId}`
+      : null;
+
+    // If VPA scraping failed, fall back to Pay0's payment URL as QR
+    const qrContent = upiLink || paymentUrl;
+
+    console.log(`Pay0 order created: ${orderId} ₹${amountNum} vpa=${vpa || "not found"} webhook→${webhookUrl}`);
     res.json({
       payment_url: paymentUrl,
-      qr_content:  paymentUrl,   // QR encodes Pay0's payment URL
-      upi_link:    paymentUrl,   // "Open in App" also uses Pay0's URL
+      qr_content:  qrContent,
+      upi_link:    upiLink,
       order_id:    orderId,
     });
   } catch (err: any) {
