@@ -592,6 +592,38 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
+        {/* ─── Support Card — mobile only (desktop has sidebar) ─── */}
+        <motion.div variants={itemVariant} className="md:hidden">
+          <Link href="/support">
+            <motion.div
+              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.97 }}
+              className="p-4 rounded-2xl flex items-center justify-between cursor-pointer"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg,#0f172a,#1e1b4b)"
+                  : "linear-gradient(135deg,#ede9fe,#ddd6fe)",
+                border: isDark ? "1px solid rgba(139,92,246,0.25)" : "1px solid rgba(109,40,217,0.2)",
+                boxShadow: isDark ? "0 4px 20px rgba(0,0,0,0.3)" : "0 4px 16px rgba(109,40,217,0.1)",
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.3)" }}
+                >
+                  <MessageCircle className="w-6 h-6" style={{ color: "#a855f7" }} />
+                </div>
+                <div>
+                  <p className="font-black text-sm" style={{ color: "var(--theme-t1)" }}>Support Center</p>
+                  <p className="text-xs" style={{ color: "var(--theme-t3)" }}>Get help · Contact us</p>
+                </div>
+              </div>
+              <ArrowUpRight className="w-5 h-5 flex-shrink-0" style={{ color: "#a855f7" }} />
+            </motion.div>
+          </Link>
+        </motion.div>
+
         {/* ─── Gift Code Modal ─── */}
         <AnimatePresence>
           {giftOpen && (

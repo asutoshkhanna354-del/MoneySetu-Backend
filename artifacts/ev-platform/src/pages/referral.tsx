@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Users, Copy, Share2, Gift } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { format } from "date-fns";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface ReferralStats {
   referralCode: string;
@@ -31,7 +32,7 @@ export default function ReferralPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("ev_token");
-    fetch("/api/referrals/stats", {
+    apiFetch("/api/referrals/stats", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
