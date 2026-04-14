@@ -30,22 +30,35 @@ type Brand = {
   buttonLabel: string;
 };
 
+const GPayLogo = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
+
+const NetBankingIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 48 48">
+    <path d="M4 20h40v4H4z" fill="white" opacity="0.6"/>
+    <rect x="6" y="24" width="36" height="16" rx="2" fill="white" opacity="0.9"/>
+    <rect x="10" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+    <rect x="20" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+    <rect x="30" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
+    <path d="M24 8l20 12H4z" fill="white"/>
+  </svg>
+);
+
 const BRANDS: Record<string, Brand> = {
   gpay: {
-    name: "Google Pay",
+    name: "Pay",
     accent: "#4285F4",
     bg: "rgba(66,133,244,0.08)",
     border: "1px solid rgba(66,133,244,0.2)",
     appScheme: (p) => `tez://upi/pay?${p}`,
     buttonLabel: "Open in Google Pay",
-    logo: (
-      <svg width="32" height="32" viewBox="0 0 24 24">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-    ),
+    logo: <GPayLogo />,
   },
   phonepe: {
     name: "PhonePe",
@@ -54,16 +67,16 @@ const BRANDS: Record<string, Brand> = {
     border: "1px solid rgba(95,37,159,0.2)",
     appScheme: (p) => `phonepe://pay?${p}`,
     buttonLabel: "Open in PhonePe",
-    logo: <img src="/logos/phonepe.svg" alt="PhonePe" style={{ width: 32, height: 32 }} />,
+    logo: <img src="/logos/phonepe.svg" alt="PhonePe" style={{ width: 36, height: 36 }} />,
   },
   paytm: {
-    name: "Paytm",
+    name: "",
     accent: "#00BAF2",
     bg: "rgba(0,186,242,0.07)",
     border: "1px solid rgba(0,186,242,0.18)",
     appScheme: (p) => `paytmmp://pay?${p}`,
     buttonLabel: "Open in Paytm",
-    logo: <img src="/logos/paytm_logo.png" alt="Paytm" style={{ height: 24, width: "auto", objectFit: "contain" }} />,
+    logo: <img src="/logos/paytm_logo.png" alt="Paytm" style={{ height: 44, width: "auto", objectFit: "contain" }} />,
   },
   upi: {
     name: "Any UPI App",
@@ -72,7 +85,7 @@ const BRANDS: Record<string, Brand> = {
     border: "1px solid rgba(9,121,57,0.18)",
     appScheme: (p) => `upi://pay?${p}`,
     buttonLabel: "Open UPI App",
-    logo: <img src="/logos/upi.svg" alt="UPI" style={{ height: 28, width: "auto" }} />,
+    logo: <img src="/logos/upi.svg" alt="UPI" style={{ height: 32, width: "auto" }} />,
   },
   netbanking: {
     name: "Net Banking",
@@ -81,18 +94,7 @@ const BRANDS: Record<string, Brand> = {
     border: "1px solid rgba(37,99,235,0.18)",
     appScheme: null,
     buttonLabel: "Scan QR",
-    logo: (
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg,#1e3a5f,#2563eb)" }}>
-        <svg width="20" height="20" viewBox="0 0 48 48">
-          <path d="M4 20h40v4H4z" fill="white" opacity="0.5"/>
-          <rect x="6" y="24" width="36" height="16" rx="2" fill="white" opacity="0.9"/>
-          <rect x="10" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
-          <rect x="20" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
-          <rect x="30" y="28" width="8" height="5" rx="1" fill="#2563eb"/>
-          <path d="M24 8l20 12H4z" fill="white"/>
-        </svg>
-      </div>
-    ),
+    logo: <NetBankingIcon />,
   },
 };
 
@@ -280,7 +282,7 @@ function PaymentQRModal({
   );
 }
 
-// ── Payment Method Card ────────────────────────────────────────────────────────
+// ── Payment Method Button (full-width branded pill) ───────────────────────────
 function MethodCard({
   brandKey,
   brand,
@@ -294,26 +296,31 @@ function MethodCard({
   disabled: boolean;
   onClick: () => void;
 }) {
+  // Per-brand pill styling matching the screenshot exactly
+  const styles: Record<string, React.CSSProperties> = {
+    gpay:       { background: "#000000", color: "#ffffff" },
+    phonepe:    { background: "#f5f3ff", color: "#5f259f" },
+    paytm:      { background: "#ffffff", color: "#00BAF2" },
+    upi:        { background: "#ffffff", color: "#111111" },
+    netbanking: { background: "linear-gradient(135deg,#1e3a8a,#2563eb)", color: "#ffffff" },
+  };
+  const s = styles[brandKey] || { background: "#fff", color: "#000" };
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center gap-4 rounded-2xl px-4 py-4 transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-      style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: brand.bg, border: brand.border }}>
-        {brand.logo}
-      </div>
-      <div className="flex-1 text-left">
-        <p className="font-black text-sm" style={{ color: "var(--theme-t1)" }}>{brand.name}</p>
-        <p className="text-xs" style={{ color: "var(--theme-t3)" }}>
-          {brandKey === "netbanking" ? "QR scan via banking app" : "Instant UPI transfer"}
-        </p>
-      </div>
+      className="w-full flex items-center justify-center gap-3 rounded-2xl transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{ ...s, height: 64, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
       {loading ? (
-        <Loader2 className="w-5 h-5 animate-spin" style={{ color: brand.accent }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: s.color }} />
       ) : (
-        <ChevronRight className="w-5 h-5" style={{ color: "var(--theme-t4)" }} />
+        <>
+          <span className="flex items-center justify-center w-8 h-8">{brand.logo}</span>
+          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: 0.2, color: s.color }}>
+            {brand.name}
+          </span>
+        </>
       )}
     </button>
   );
