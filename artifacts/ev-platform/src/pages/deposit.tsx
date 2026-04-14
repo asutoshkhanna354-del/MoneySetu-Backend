@@ -76,7 +76,7 @@ const BRANDS: Record<string, Brand> = {
     border: "1px solid rgba(0,186,242,0.18)",
     appScheme: (p) => `paytmmp://pay?${p}`,
     buttonLabel: "Open in Paytm",
-    logo: <img src="/logos/paytm_logo.png" alt="Paytm" style={{ height: 44, width: "auto", objectFit: "contain" }} />,
+    logo: <img src="/logos/paytm_logo.png" alt="Paytm" style={{ height: 28, width: "auto", maxWidth: 140, objectFit: "contain" }} />,
   },
   upi: {
     name: "Any UPI App",
@@ -316,10 +316,12 @@ function MethodCard({
         <Loader2 className="w-6 h-6 animate-spin" style={{ color: s.color }} />
       ) : (
         <>
-          <span className="flex items-center justify-center w-8 h-8">{brand.logo}</span>
-          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: 0.2, color: s.color }}>
-            {brand.name}
-          </span>
+          <span className="flex items-center justify-center">{brand.logo}</span>
+          {brand.name && (
+            <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: 0.2, color: s.color }}>
+              {brand.name}
+            </span>
+          )}
         </>
       )}
     </button>
