@@ -140,9 +140,16 @@ function PaymentQRModal({
 
         ) : (
           <>
-            <p className="text-sm font-semibold text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
-              Scan the QR below with any UPI app
-            </p>
+            {/* Instruction */}
+            <div className="w-full rounded-xl px-4 py-3 text-center"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
+                📱 On mobile — tap the button below to pay
+              </p>
+              <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                On desktop — scan QR with your phone camera
+              </p>
+            </div>
 
             {/* QR Code */}
             <div className="rounded-3xl p-5 flex items-center justify-center"
@@ -152,7 +159,7 @@ function PaymentQRModal({
 
             {/* Timer */}
             <div className="flex flex-col items-center gap-1">
-              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>QR expires in</p>
+              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>Expires in</p>
               <p className="text-2xl font-black tabular-nums" style={{ color: secondsLeft < 60 ? "#ef4444" : "#f59e0b" }}>
                 {mm}:{ss}
               </p>
@@ -163,20 +170,20 @@ function PaymentQRModal({
               style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}>
               <ScanLine className="w-4 h-4 animate-pulse" style={{ color: "#a855f7" }} />
               <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Waiting for payment…
+                Waiting for payment confirmation…
               </span>
             </div>
 
-            {/* Open in UPI app (mobile deep link) */}
+            {/* Tap to Pay button (mobile) */}
             {upiLink && (
-              <a href={upiLink}
+              <a href={upiLink} target="_blank" rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 rounded-2xl py-4 transition-all active:scale-[0.98]"
                 style={{
                   background: "linear-gradient(135deg,#6d28d9,#a855f7)",
                   textDecoration: "none",
                   boxShadow: "0 4px 20px rgba(139,92,246,0.4)",
                 }}>
-                <span className="font-bold text-white text-base">Open in UPI App</span>
+                <span className="font-bold text-white text-base">Tap to Pay</span>
               </a>
             )}
 
