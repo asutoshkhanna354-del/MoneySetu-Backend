@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Link } from "wouter";
+import { apiFetch } from "@/lib/apiFetch";
 
 const PLAN_COLORS: Record<string, { glow: string; badge: string; border: string; bg: string; text: string }> = {
   silver:   { glow: "rgba(148,163,184,0.3)", badge: "rgba(148,163,184,0.15)", border: "rgba(148,163,184,0.25)", bg: "rgba(148,163,184,0.06)", text: "#94a3b8" },
@@ -93,7 +94,7 @@ function PartialWithdrawForm({
     setLoading(true);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch(`/api/investments/${inv.id}/partial-withdraw`, {
+      const res = await apiFetch(`/api/investments/${inv.id}/partial-withdraw`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ amount: withdrawAmt, accountNo, ifsc, phone, accountName }),
@@ -249,7 +250,7 @@ export default function Withdraw() {
     setRedeeming(id);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch(`/api/investments/${id}/redeem`, {
+      const res = await apiFetch(`/api/investments/${id}/redeem`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

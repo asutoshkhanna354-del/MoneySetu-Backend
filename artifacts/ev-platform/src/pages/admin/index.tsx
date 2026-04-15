@@ -22,6 +22,7 @@ import { Check, X, ShieldAlert, Users, ArrowRightLeft, Zap, Plus, Pencil, Trash2
 import { useTheme } from "@/contexts/ThemeContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface PlanForm {
   name: string;
@@ -53,7 +54,7 @@ function ContactSettingsPanel() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch("/api/settings/contact")
+    apiFetch("/api/settings/contact")
       .then(r => r.json())
       .then(d => {
         setWhatsapp(d.whatsapp || "");
@@ -70,7 +71,7 @@ function ContactSettingsPanel() {
     setSaving(true);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch("/api/admin/settings/contact", {
+      const res = await apiFetch("/api/admin/settings/contact", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -211,7 +212,7 @@ function ClearProcessingButton({ onCleared }: { onCleared: () => void }) {
     setLoading(true);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch("/api/admin/transactions/cancel-processing", {
+      const res = await apiFetch("/api/admin/transactions/cancel-processing", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -266,7 +267,7 @@ function FakeActivityForm({ onSuccess }: { onSuccess: () => void }) {
     setSaving(true);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch("/api/admin/fake-activity", {
+      const res = await apiFetch("/api/admin/fake-activity", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
@@ -339,7 +340,7 @@ function GiftCodesPanel() {
   const fetchCodes = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/gift-codes", { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await apiFetch("/api/admin/gift-codes", { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) setCodes(await res.json());
     } finally { setLoading(false); }
   };
@@ -351,7 +352,7 @@ function GiftCodesPanel() {
     if (!newCode.trim() || !newAmount) return;
     setCreating(true);
     try {
-      const res = await fetch("/api/admin/gift-codes", {
+      const res = await apiFetch("/api/admin/gift-codes", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
         body: JSON.stringify({ code: newCode.trim().toUpperCase(), amount: parseFloat(newAmount), maxUses: parseInt(maxUses) || 100, requiresPlan }),
@@ -365,13 +366,13 @@ function GiftCodesPanel() {
   };
 
   const handleToggle = async (id: number) => {
-    await fetch(`/api/admin/gift-codes/${id}/toggle`, { method: "PATCH", headers: { Authorization: `Bearer ${token()}` } });
+    await apiFetch(`/api/admin/gift-codes/${id}/toggle`, { method: "PATCH", headers: { Authorization: `Bearer ${token()}` } });
     fetchCodes();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this gift code? This cannot be undone.")) return;
-    await fetch(`/api/admin/gift-codes/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
+    await apiFetch(`/api/admin/gift-codes/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
     fetchCodes();
   };
 
@@ -471,7 +472,7 @@ export default function AdminPanel() {
     setTxProcessing(txId);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch(`/api/admin/transactions/${txId}/${action}`, {
+      const res = await apiFetch(`/api/admin/transactions/${txId}/${action}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ adminMessage: txMessages[txId] || "" }),
@@ -491,7 +492,7 @@ export default function AdminPanel() {
     setMakingAdmin(userId);
     try {
       const token = localStorage.getItem("ev_token");
-      const res = await fetch(`/api/admin/users/${userId}/make-admin`, {
+      const res = await apiFetch(`/api/admin/users/${userId}/make-admin`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -977,7 +978,7 @@ export default function AdminPanel() {
                 className="rounded-xl bg-primary text-xs"
                 onClick={async () => {
                   const token = localStorage.getItem("ev_token");
-                  await fetch("/api/admin/fake-activity/seed", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+                  await apiFetch("/api/admin/fake-activity/seed", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
                   toast({ title: "20 fake activities seeded!" });
                   queryClient.invalidateQueries();
                 }}
@@ -993,7 +994,7 @@ export default function AdminPanel() {
 
             <FakeActivityList onDelete={async (id: number) => {
               const token = localStorage.getItem("ev_token");
-              await fetch(`/api/admin/fake-activity/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+              await apiFetch(`/api/admin/fake-activity/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
               toast({ title: "Deleted" });
               queryClient.invalidateQueries();
             }} />
