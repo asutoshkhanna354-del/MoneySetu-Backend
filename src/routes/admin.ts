@@ -4,6 +4,7 @@ import { usersTable, transactionsTable, investmentPlansTable, referralCommission
 import { eq, desc, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/auth.js";
 import { applyReferralCommissions } from "../lib/referrals.js";
+import bcrypt from "bcryptjs";
 
 const router = Router();
 
@@ -101,6 +102,26 @@ router.get("/admin/transactions", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Update any user's username + password (admin only) ───────────────────────
+router.patch("/admin/users/:userId/credentials", requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { username, password } = req.body;
+    if (isNaN(userId)) { res.status(400).json({ error: "Invalid user ID" }); return; }
+    if (!username && !password) { res.status(400).json({ error: "Provide username or password" }); return; }
+
+    const updates: Record<string, string> = {};
+    if (username) updates.username = username.trim();
+    if (password) updates.passwordHash = await bcrypt.hash(password, 12);
+
+    const [user] = await db.update(usersTable).set(updates).where(eq(usersTable.id, userId)).returning();
+    if (!user) { res.status(404).json({ error: "User not found" }); return; }
+    res.json({ success: true, id: user.id, username: user.username });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.patch("/admin/users/:userId/make-admin", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -132,8 +153,8 @@ router.patch("/admin/transactions/:transactionId/approve", requireAdmin, async (
       res.status(404).json({ error: "Transaction not found" });
       return;
     }
-    if (tx.status !== "pending") {
-      res.status(400).json({ error: "Transaction is not pending" });
+    if (!["pending", "processing"].includes(tx.status)) {
+      res.status(400).json({ error: "Transaction cannot be approved (already resolved)" });
       return;
     }
 
