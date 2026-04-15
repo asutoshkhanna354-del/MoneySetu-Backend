@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/apiFetch";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
@@ -21,7 +22,7 @@ export default function Support() {
   const [telegramLink, setTelegramLink] = useState("");
 
   useEffect(() => {
-    fetch("/api/settings/contact")
+    apiFetch("/api/settings/contact")
       .then(r => r.json())
       .then(d => {
         if (d.supportEmail) setSupportEmail(d.supportEmail);

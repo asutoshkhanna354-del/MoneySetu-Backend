@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/apiFetch";
 import { useState, useEffect } from "react";
 import { X, MessageCircle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -43,7 +44,7 @@ export function ContactUs() {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    fetch("/api/settings/contact")
+    apiFetch("/api/settings/contact")
       .then(r => r.json())
       .then(data => setLinks({ whatsapp: data.whatsapp || "", instagram: data.instagram || "", telegram: data.telegram || "" }))
       .catch(() => {});

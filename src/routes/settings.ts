@@ -14,9 +14,10 @@ router.get("/settings/contact", async (_req, res) => {
     for (const row of rows) map[row.key] = row.value;
 
     res.json({
-      whatsapp:  map["contact_whatsapp"]  || "",
-      instagram: map["contact_instagram"] || "",
-      telegram:  map["contact_telegram"]  || "",
+      whatsapp:     map["contact_whatsapp"]  || "",
+      instagram:    map["contact_instagram"] || "",
+      telegram:     map["contact_telegram"]  || "",
+      supportEmail: map["support_email"]     || "",
     });
   } catch {
     res.status(500).json({ error: "Server error" });
@@ -26,7 +27,7 @@ router.get("/settings/contact", async (_req, res) => {
 // ── PATCH contact settings (admin only) ──────────────────────
 router.patch("/admin/settings/contact", requireAdmin, async (req, res) => {
   try {
-    const { whatsapp, instagram, telegram } = req.body;
+    const { whatsapp, instagram, telegram, supportEmail } = req.body;
 
     async function upsert(key: string, value: string) {
       const existing = await db.select().from(siteSettingsTable).where(eq(siteSettingsTable.key, key));
@@ -37,11 +38,12 @@ router.patch("/admin/settings/contact", requireAdmin, async (req, res) => {
       }
     }
 
-    if (whatsapp !== undefined)  await upsert("contact_whatsapp",  whatsapp.trim());
-    if (instagram !== undefined) await upsert("contact_instagram", instagram.trim());
-    if (telegram !== undefined)  await upsert("contact_telegram",  telegram.trim());
+    if (whatsapp     !== undefined) await upsert("contact_whatsapp",  whatsapp.trim());
+    if (instagram    !== undefined) await upsert("contact_instagram", instagram.trim());
+    if (telegram     !== undefined) await upsert("contact_telegram",  telegram.trim());
+    if (supportEmail !== undefined) await upsert("support_email",     supportEmail.trim());
 
-    res.json({ message: "Contact settings updated", whatsapp, instagram, telegram });
+    res.json({ message: "Contact settings updated", whatsapp, instagram, telegram, supportEmail });
   } catch {
     res.status(500).json({ error: "Server error" });
   }
