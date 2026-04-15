@@ -510,6 +510,42 @@ export default function AdminPanel() {
   const { data: transactions } = useAdminGetTransactions({ query: { enabled: isAdmin } });
   const { data: plans, refetch: refetchPlans } = useGetInvestmentPlans({ query: { enabled: isAdmin } });
 
+  // Full financial stats per user
+  type UserStats = {
+    totalDeposit: number;
+    totalWithdrawal: number;
+    totalTransactions: number;
+    totalEarnings: number;
+    balance: number;
+    totalInvested: number;
+  };
+  const [usersStats, setUsersStats] = useState<Record<number, UserStats>>({});
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    setStatsLoading(true);
+    const token = localStorage.getItem("ev_token");
+    apiFetch("/api/admin/users-stats", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then((data: any[]) => {
+        const map: Record<number, UserStats> = {};
+        data.forEach(u => {
+          map[u.id] = {
+            totalDeposit:      u.totalDeposit      ?? 0,
+            totalWithdrawal:   u.totalWithdrawal   ?? 0,
+            totalTransactions: u.totalTransactions ?? 0,
+            totalEarnings:     u.totalEarnings     ?? 0,
+            balance:           u.balance           ?? 0,
+            totalInvested:     u.totalInvested     ?? 0,
+          };
+        });
+        setUsersStats(map);
+      })
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+  }, [isAdmin]);
+
   const invalidateTx = () => queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
   const invalidatePlans = () => { queryClient.invalidateQueries(); refetchPlans(); };
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -768,64 +804,111 @@ export default function AdminPanel() {
 
           {/* ── Users ── */}
           <TabsContent value="users" className="space-y-4 mt-0">
-            <h3 className="font-bold text-lg px-1">Platform Users</h3>
-            {users?.map((u) => (
-              <div key={u.id} className="p-4 rounded-2xl" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-bold text-sm text-white">
-                      {u.name}{" "}
-                      {u.isAdmin && <span className="text-purple-400 text-[10px] uppercase ml-1">(Admin)</span>}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--theme-t3)" }}>{u.phone || u.username || "—"}</p>
-                    <p className="text-xs mt-1" style={{ color: "var(--theme-t4)" }}>
-                      Invested: ₹{u.totalInvested?.toFixed(2)} · Earnings: ₹{u.totalEarnings?.toFixed(2)}
-                    </p>
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-bold text-lg">Platform Users</h3>
+              <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.12)", color: "#a78bfa" }}>
+                {users?.length ?? 0} users
+              </span>
+            </div>
+
+            {statsLoading && (
+              <div className="text-xs text-center py-2" style={{ color: "var(--theme-t4)" }}>Loading financial stats…</div>
+            )}
+
+            {users?.map((u) => {
+              const st = usersStats[u.id];
+              return (
+                <div key={u.id} className="rounded-2xl overflow-hidden" style={{ background: "var(--theme-card)", border: "1px solid var(--theme-border)" }}>
+
+                  {/* ── Top row: identity + wallet + actions ── */}
+                  <div className="p-4 flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm text-white truncate">{u.name}</p>
+                        {u.isAdmin && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full" style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa" }}>Admin</span>
+                        )}
+                      </div>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "var(--theme-t3)" }}>
+                        {u.phone || u.username || "—"}
+                      </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--theme-t4)" }}>
+                        Invested: <span className="font-semibold text-white">₹{(st?.totalInvested ?? u.totalInvested ?? 0).toFixed(2)}</span>
+                        {" · "}Ref: <span className="font-mono text-purple-400">{u.referralCode}</span>
+                      </p>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--theme-t4)" }}>Wallet</p>
+                      <p className="font-black text-purple-400 text-xl leading-tight">₹{(st?.balance ?? u.balance ?? 0).toFixed(2)}</p>
+                      <div className="flex gap-2 mt-1.5 justify-end">
+                        <button
+                          className="text-[10px] font-semibold underline" style={{ color: "var(--theme-t3)" }}
+                          onClick={() => { setEditBalanceUserId(u.id); setNewBalance((st?.balance ?? u.balance ?? 0).toFixed(2)); }}
+                        >
+                          Edit Balance
+                        </button>
+                        {!u.isAdmin && (
+                          <button
+                            className="text-[10px] font-semibold text-purple-400 underline disabled:opacity-50"
+                            disabled={makingAdmin === u.id}
+                            onClick={() => makeAdmin(u.id)}
+                          >
+                            {makingAdmin === u.id ? "Promoting…" : "Make Admin"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-purple-400 text-lg">₹{u.balance?.toFixed(2)}</p>
-                    <button
-                      className="text-[10px] underline mt-1 block" style={{ color: "var(--theme-t3)" }}
-                      onClick={() => { setEditBalanceUserId(u.id); setNewBalance(u.balance?.toFixed(2) || "0"); }}
-                    >
-                      Edit Balance
-                    </button>
-                    {!u.isAdmin && (
-                      <button
-                        className="text-[10px] text-purple-400 underline mt-1 block disabled:opacity-50"
-                        disabled={makingAdmin === u.id}
-                        onClick={() => makeAdmin(u.id)}
+
+                  {/* ── Financial Stats Grid ── */}
+                  <div className="grid grid-cols-4 border-t" style={{ borderColor: "var(--theme-border)" }}>
+                    {[
+                      { label: "Deposit",      value: st?.totalDeposit,      color: "#4ade80", bg: "rgba(74,222,128,0.05)"  },
+                      { label: "Withdrawal",   value: st?.totalWithdrawal,   color: "#f87171", bg: "rgba(248,113,113,0.05)" },
+                      { label: "Earnings",     value: st?.totalEarnings,     color: "#a78bfa", bg: "rgba(167,139,250,0.05)" },
+                      { label: "Txns",         value: st?.totalTransactions, color: "#fb923c", bg: "rgba(251,146,60,0.05)", isCount: true },
+                    ].map(({ label, value, color, bg, isCount }) => (
+                      <div key={label} className="px-3 py-2.5 text-center" style={{ background: bg }}>
+                        <p className="text-[9px] font-bold uppercase tracking-wider mb-0.5" style={{ color: "var(--theme-t4)" }}>{label}</p>
+                        <p className="text-sm font-black" style={{ color: value ? color : "var(--theme-t4)" }}>
+                          {value === undefined
+                            ? <span className="text-[10px]">—</span>
+                            : isCount
+                              ? value
+                              : `₹${(value as number).toFixed(0)}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ── Edit Balance inline ── */}
+                  {editBalanceUserId === u.id && (
+                    <div className="px-4 pb-4 pt-2 flex gap-2 border-t" style={{ borderColor: "var(--theme-border)" }}>
+                      <input
+                        type="number"
+                        value={newBalance}
+                        onChange={(e) => setNewBalance(e.target.value)}
+                        placeholder="New balance (₹)"
+                        className="flex-1 h-9 rounded-xl text-sm px-3 focus:outline-none"
+                        style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-borderhi)", color: "var(--theme-t1)" }}
+                      />
+                      <Button
+                        size="sm"
+                        className="rounded-xl bg-primary h-9"
+                        onClick={() => updateBalance.mutate({ userId: u.id, data: { balance: parseFloat(newBalance) } })}
+                        disabled={updateBalance.isPending}
                       >
-                        {makingAdmin === u.id ? "Promoting..." : "Make Admin"}
-                      </button>
-                    )}
-                  </div>
+                        <IndianRupee className="w-3 h-3 mr-1" /> Save
+                      </Button>
+                      <Button size="sm" variant="ghost" className="rounded-xl h-9 text-white/40" onClick={() => setEditBalanceUserId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {editBalanceUserId === u.id && (
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      type="number"
-                      value={newBalance}
-                      onChange={(e) => setNewBalance(e.target.value)}
-                      placeholder="New balance (₹)"
-                      className="flex-1 h-9 rounded-xl text-sm px-3 focus:outline-none"
-                      style={{ background: "var(--theme-card2)", border: "1px solid var(--theme-borderhi)", color: "var(--theme-t1)" }}
-                    />
-                    <Button
-                      size="sm"
-                      className="rounded-xl bg-primary h-9"
-                      onClick={() => updateBalance.mutate({ userId: u.id, data: { balance: parseFloat(newBalance) } })}
-                      disabled={updateBalance.isPending}
-                    >
-                      <IndianRupee className="w-3 h-3 mr-1" /> Save
-                    </Button>
-                    <Button size="sm" variant="ghost" className="rounded-xl h-9 text-white/40" onClick={() => setEditBalanceUserId(null)}>
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </TabsContent>
 
           {/* ── Plans ── */}

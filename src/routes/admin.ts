@@ -28,6 +28,65 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/users-stats — full financial stats per user (aggregated from transactions)
+router.get("/admin/users-stats", requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.execute<{
+      user_id: number;
+      name: string;
+      phone: string | null;
+      username: string | null;
+      is_admin: boolean;
+      referral_code: string;
+      balance: string;
+      total_invested: string;
+      total_earnings: string;
+      created_at: string;
+      total_deposit: string;
+      total_withdrawal: string;
+      total_transactions: string;
+    }>(sql`
+      SELECT
+        u.id                                                                      AS user_id,
+        u.name,
+        u.phone,
+        u.username,
+        u.is_admin,
+        u.referral_code,
+        u.balance,
+        u.total_invested,
+        u.total_earnings,
+        u.created_at,
+        COALESCE(SUM(CASE WHEN t.type = 'deposit'    AND t.status = 'approved' THEN t.amount::numeric ELSE 0 END), 0) AS total_deposit,
+        COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status != 'rejected' THEN t.amount::numeric ELSE 0 END), 0) AS total_withdrawal,
+        COUNT(t.id)                                                               AS total_transactions
+      FROM users u
+      LEFT JOIN transactions t ON t.user_id = u.id
+      GROUP BY u.id
+      ORDER BY u.created_at DESC
+    `);
+
+    res.json(rows.map(r => ({
+      id:                 r.user_id,
+      name:               r.name,
+      phone:              r.phone,
+      username:           r.username,
+      isAdmin:            r.is_admin,
+      referralCode:       r.referral_code,
+      balance:            parseFloat(r.balance),
+      totalInvested:      parseFloat(r.total_invested),
+      totalEarnings:      parseFloat(r.total_earnings),
+      createdAt:          r.created_at,
+      totalDeposit:       parseFloat(r.total_deposit),
+      totalWithdrawal:    parseFloat(r.total_withdrawal),
+      totalTransactions:  parseInt(String(r.total_transactions), 10),
+    })));
+  } catch (err) {
+    req.log.error({ err }, "Admin users-stats error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.patch("/admin/users/:userId/balance", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
